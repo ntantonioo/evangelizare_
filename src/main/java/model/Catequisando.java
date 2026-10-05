@@ -15,4 +15,14 @@ public class Catequisando extends Usuario{
     public void setTurma(Turma turma) {
         this.turma = turma;
     }
+
+    @Override
+    public String toString() {
+        return "Cliente{" +
+                "id='" + getId() +'\'' +
+                ", nome='" + getNome() + '\'' +
+                ", idade='" + getIdade() + '\'' +
+                ", etapa da catequese'" + getTurma() +
+                '}';
+    }
 }
