@@ -39,9 +39,9 @@ public interface SistemaEvangelizare {
 
     List<Turma> pesquisarTurmaPorTipo(String tipoTurma)  throws TurmaNaoExisteException;
 
-    List<Turma> pesquisarTurmaPorCatequista(String catequista) throws CatequistaNaoExisteException, TurmaNaoExisteException;
+    List<Turma> pesquisarTurmaPorCatequista(String catequistaId) throws CatequistaNaoExisteException, TurmaNaoExisteException;
 
-    List<Turma> pesquisarTurmaPorCatequisando(String catequisando) throws CatequisandoNaoExisteException, TurmaNaoExisteException;
+    List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId) throws CatequisandoNaoExisteException, TurmaNaoExisteException;
 
     //Noticia
 
