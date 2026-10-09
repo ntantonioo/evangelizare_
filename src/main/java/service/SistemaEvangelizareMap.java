@@ -153,13 +153,17 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public List<Turma> pesquisarTurmaPorCatequista(String catequista) throws CatequistaNaoExisteException, TurmaNaoExisteException {
-        //TODO
+    public List<Turma> pesquisarTurmaPorCatequista(String catequistaId) throws CatequistaNaoExisteException, TurmaNaoExisteException {
+        return turmas.values().stream()
+                .filter(c -> c.getCatequista().getId().equals(catequistaId))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Turma> pesquisarTurmaPorCatequisando(String catequisando) throws CatequisandoNaoExisteException, TurmaNaoExisteException {
-        //TODO
+    public List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId) throws CatequisandoNaoExisteException, TurmaNaoExisteException {
+        return turmas.values().stream()
+                .filter(c -> c.getCatequisando().getId().equals(catequisandoId))
+                .collect(Collectors.toList());
     }
 
 }
