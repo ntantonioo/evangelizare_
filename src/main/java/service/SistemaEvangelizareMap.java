@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -20,7 +21,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     private Map<String, Catequisando> catequisandos = new HashMap<>();
     private Map<String, Turma> turmas = new HashMap<>();
 
-    //CATEQUISANDO
+    //CATEQUISTA
 
     @Override
     public void cadastrarCatequista(Catequista catequista) {
@@ -61,7 +62,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     @Override
     public void removerCatequisando(String id) throws CatequisandoNaoExisteException {
         if (!catequisandos.containsKey(id)) {
-            throw new CatequisandoNaoExisteException("Catequisando nao encontrado: " + id );
+            throw new CatequisandoNaoExisteException("Catequisando nao encontrado: " + id);
         }
         catequisandos.remove(id);
     }
@@ -91,7 +92,74 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         pesquisarCatequisandoPorId(turma.getCatequisando().getId());
         pesquisarCatequistaPorId(turma.getCatequista().getId());
         turmas.put(turma.getIdTurma(), turma);
+    }
 
+    @Override
+    public void removerTurma(String idTurma) throws TurmaNaoExisteException {
+        Turma turma = turmas.get(idTurma);
+
+        if (turma == null) {
+            throw new TurmaNaoExisteException(
+                    "Turma nao encontrada: " + idTurma
+            );
+        }
+
+        Catequisando catequisando = turma.getCatequisando();
+
+        if (catequisando != null) {
+            catequisando.setTurma(null);
+        }
+
+        turmas.remove(idTurma);
+    }
+
+    @Override
+    public List<Turma> pesquisarTurmaPorId(String idTurma)
+            throws TurmaNaoExisteException {
+
+        Turma turma = turmas.get(idTurma);
+
+        if (turma == null) {
+            throw new TurmaNaoExisteException(
+                    "Turma nao encontrada: " + idTurma
+            );
+        }
+
+        List<Turma> resultado = new ArrayList<>();
+        resultado.add(turma);
+
+        return resultado;
+    }
+
+    @Override
+    public List<Turma> pesquisarTurmaPorTipo(String tipoTurma)
+            throws TurmaNaoExisteException {
+
+        List<Turma> resultado = new ArrayList<>();
+
+        for (Turma turma : turmas.values()) {
+            if (turma.getTipoTurma().name().equalsIgnoreCase(tipoTurma)) {
+                resultado.add(turma);
+            }
+        }
+
+        if (resultado.isEmpty()) {
+            throw new TurmaNaoExisteException(
+                    "Nenhuma turma encontrada do tipo: " + tipoTurma
+            );
+        }
+
+        return resultado;
+    }
+
+    @Override
+    public List<Turma> pesquisarTurmaPorCatequista(String catequista) throws CatequistaNaoExisteException, TurmaNaoExisteException {
+        //TODO
+    }
+
+    @Override
+    public List<Turma> pesquisarTurmaPorCatequisando(String catequisando) throws CatequisandoNaoExisteException, TurmaNaoExisteException {
+        //TODO
     }
 
 }
