@@ -1,5 +1,11 @@
 package ui;
 
+import exception.CatequisandoNaoExisteException;
+import exception.CatequistaNaoExisteException;
+import exception.TurmaNaoExisteException;
+import model.Catequisando;
+import model.Catequista;
+import model.Turma;
 
 import java.util.Scanner;
 
@@ -37,7 +43,7 @@ public class TelaPrincipal {
                     break;
 
                 case 2:
-                    //TODO
+                    cadastrarTurma(scanner);
                     break;
 
                 case 3:
@@ -87,8 +93,44 @@ public class TelaPrincipal {
             case 0:
                 break;
 
+            default:
+                System.out.println("Opção de perfil inválida!");
+        }
+    }
+
+    private void cadastrarTurma(Scanner scanner) {
+        System.out.println("\\n========== CADASTRO DE TURMA ==========");
+        System.out.println("Selecione a etapa da turma que deseja cadastrar:");
+        System.out.println("1 - Catequese infantil");
+        System.out.println("2 - Crisma Jovem");
+        System.out.println("3 - Crisma Adulto");
+        System.out.println("0 - Voltar ao menu principal");
+        System.out.println("Escolha uma opção: ");
+
+        int etapaTurma = scanner.nextInt();
+
+        switch (etapaTurma) {
+
+            case 1:
+                System.out.println("Catequese Infantil");
+                // TODO
+                break;
+
+            case 2:
+                System.out.println("Crisma Jovem");
+                // TODO
+                break;
+
+            case 3:
+                System.out.println("Crisma Adulto");
+                // TODO
+                break;
+
+            case 0:
+                break;
+
                 default:
-                    System.out.println("Opção de perfil inválida!");
+                    System.out.println("Opção Inválida");
         }
     }
 }
