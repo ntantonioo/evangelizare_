@@ -9,11 +9,16 @@ import java.util.stream.Collectors;
 import exception.CatequistaNaoEncontradoException;
 import exception.CatequisandoNaoEncontradoException;
 import exception.TurmaNaoEncontradoException;
+
+import model.Administrador;
+import model.Usuario;
 import model.Catequisando;
 import model.Catequista;
 import model.Turma;
 
 public class SistemaEvangelizareMap implements  SistemaEvangelizare {
+
+    private Map<String, Usuario> usuarios = new HashMap<>();
 
     private Map<String, Catequista> catequistas = new HashMap<>();
     private Map<String, Catequisando> catequisandos = new HashMap<>();
@@ -23,7 +28,10 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public void cadastrarCatequista(Catequista catequista) {
+        validarNovoUsuario(catequista);
+
         catequistas.put(catequista.getId(), catequista);
+        usuarios.put(catequista.getId(), catequista);
     }
 
     @Override
@@ -32,6 +40,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             throw new CatequistaNaoEncontradoException("Catequista não encontrado: " + id);
         }
         catequistas.remove(id);
+        usuarios.remove(id);
     }
 
     @Override
@@ -54,7 +63,10 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public void cadastrarCatequisando(Catequisando catequisando) {
+        validarNovoUsuario(catequisando);
+
         catequisandos.put(catequisando.getId(), catequisando);
+        usuarios.put(catequisando.getId(), catequisando);
     }
 
     @Override
@@ -63,6 +75,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             throw new CatequisandoNaoEncontradoException("Catequisando nao encontrado: " + id);
         }
         catequisandos.remove(id);
+        usuarios.remove(id);
     }
 
     @Override
@@ -164,4 +177,46 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                 .collect(Collectors.toList());
     }
 
+
+    // USÚARIOS E AUTENTIFICAÇÃO
+
+    @Override
+    public void cadastrarAdministrador(Administrador administrador) {
+        validarNovoUsuario(administrador);
+        usuarios.put(administrador.getId(), administrador);
+    }
+
+    @Override
+    public Usuario pesquisarUsuarioPorId(String id) {
+        return usuarios.get(id);
+    }
+
+    @Override
+    public boolean autenticarUsuario(String id, String senha) {
+        Usuario usuario = pesquisarUsuarioPorId(id);
+
+        return usuario != null
+                && usuario.getSenha() != null
+                && usuario.getSenha().equals(senha);
+    }
+
+    private void validarNovoUsuario(Usuario usuario) {
+        if (usuario == null) {
+            throw new IllegalArgumentException(
+                    "O usuário não pode ser nulo."
+            );
+        }
+
+        if (usuario.getId() == null || usuario.getId().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ID do usuário é obrigatório."
+            );
+        }
+
+        if (usuarios.containsKey(usuario.getId())) {
+            throw new IllegalArgumentException(
+                    "Já existe um usuário cadastrado com esse ID."
+            );
+        }
+    }
 }
