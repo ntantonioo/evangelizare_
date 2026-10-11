@@ -1,12 +1,5 @@
 package ui;
 
-import exception.CatequisandoNaoExisteException;
-import exception.CatequistaNaoExisteException;
-import exception.TurmaNaoExisteException;
-import model.Catequisando;
-import model.Catequista;
-import model.Turma;
-
 import java.util.Scanner;
 
 public class TelaPrincipal {

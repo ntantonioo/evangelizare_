@@ -2,9 +2,9 @@ package service;
 
 import java.util.List;
 
-import exception.CatequisandoNaoExisteException;
-import exception.CatequistaNaoExisteException;
-import exception.TurmaNaoExisteException;
+import exception.CatequisandoNaoEncontradoException;
+import exception.CatequistaNaoEncontradoException;
+import exception.TurmaNaoEncontradoException;
 import model.Catequisando;
 import model.Catequista;
 import model.Turma;
@@ -14,34 +14,34 @@ public interface SistemaEvangelizare {
     // Catequista
     void cadastrarCatequista(Catequista catequista);
 
-    void removerCatequista(String id) throws CatequistaNaoExisteException;
+    void removerCatequista(String id) throws CatequistaNaoEncontradoException;
 
-    Catequista pesquisarCatequistaPorId(String id) throws CatequistaNaoExisteException;
+    Catequista pesquisarCatequistaPorId(String id) throws CatequistaNaoEncontradoException;
 
     List<Catequista> pesquisarCatequistaPorNome(String nome);
 
     // Catequisando
     void cadastrarCatequisando (Catequisando catequisando);
 
-    void removerCatequisando (String id) throws CatequisandoNaoExisteException;
+    void removerCatequisando (String id) throws CatequisandoNaoEncontradoException;
 
-    Catequisando pesquisarCatequisandoPorId(String id) throws CatequisandoNaoExisteException;
+    Catequisando pesquisarCatequisandoPorId(String id) throws CatequisandoNaoEncontradoException;
 
     List<Catequisando> pesquisarCatequisandoPorNome(String nome);
 
     //Turma
     void cadastrarTurma(Turma turma)
-        throws TurmaNaoExisteException, CatequistaNaoExisteException, CatequisandoNaoExisteException;
+        throws TurmaNaoEncontradoException, CatequistaNaoEncontradoException, CatequisandoNaoEncontradoException;
 
-    void removerTurma(String idTurma) throws TurmaNaoExisteException;
+    void removerTurma(String idTurma) throws TurmaNaoEncontradoException;
 
-    List<Turma> pesquisarTurmaPorId(String idTurma) throws TurmaNaoExisteException;
+    List<Turma> pesquisarTurmaPorId(String idTurma) throws TurmaNaoEncontradoException;
 
-    List<Turma> pesquisarTurmaPorTipo(String tipoTurma)  throws TurmaNaoExisteException;
+    List<Turma> pesquisarTurmaPorTipo(String tipoTurma)  throws TurmaNaoEncontradoException;
 
-    List<Turma> pesquisarTurmaPorCatequista(String catequistaId) throws CatequistaNaoExisteException, TurmaNaoExisteException;
+    List<Turma> pesquisarTurmaPorCatequista(String catequistaId) throws CatequistaNaoEncontradoException, TurmaNaoEncontradoException;
 
-    List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId) throws CatequisandoNaoExisteException, TurmaNaoExisteException;
+    List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId) throws CatequisandoNaoEncontradoException, TurmaNaoEncontradoException;
 
     //Noticia
 

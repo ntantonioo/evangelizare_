@@ -1,16 +1,14 @@
 package service;
 
-import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import exception.CatequistaNaoExisteException;
-import exception.CatequisandoNaoExisteException;
-import exception.TurmaNaoExisteException;
+import exception.CatequistaNaoEncontradoException;
+import exception.CatequisandoNaoEncontradoException;
+import exception.TurmaNaoEncontradoException;
 import model.Catequisando;
 import model.Catequista;
 import model.Turma;
@@ -29,18 +27,18 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public void removerCatequista(String id) throws CatequistaNaoExisteException {
+    public void removerCatequista(String id) throws CatequistaNaoEncontradoException {
         if (!catequistas.containsKey(id)) {
-            throw new CatequistaNaoExisteException("Catequista não encontrado: " + id);
+            throw new CatequistaNaoEncontradoException("Catequista não encontrado: " + id);
         }
         catequistas.remove(id);
     }
 
     @Override
-    public Catequista pesquisarCatequistaPorId(String id) throws CatequistaNaoExisteException {
+    public Catequista pesquisarCatequistaPorId(String id) throws CatequistaNaoEncontradoException {
         Catequista catequista = catequistas.get(id);
         if (catequista == null) {
-            throw new CatequistaNaoExisteException("Vendedor não encontrado: " + id);
+            throw new CatequistaNaoEncontradoException("Vendedor não encontrado: " + id);
         }
         return catequista;
     }
@@ -60,18 +58,18 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public void removerCatequisando(String id) throws CatequisandoNaoExisteException {
+    public void removerCatequisando(String id) throws CatequisandoNaoEncontradoException {
         if (!catequisandos.containsKey(id)) {
-            throw new CatequisandoNaoExisteException("Catequisando nao encontrado: " + id);
+            throw new CatequisandoNaoEncontradoException("Catequisando nao encontrado: " + id);
         }
         catequisandos.remove(id);
     }
 
     @Override
-    public Catequisando pesquisarCatequisandoPorId(String id) throws CatequisandoNaoExisteException {
+    public Catequisando pesquisarCatequisandoPorId(String id) throws CatequisandoNaoEncontradoException {
         Catequisando catequisando = catequisandos.get(id);
         if (catequisando == null) {
-            throw new CatequisandoNaoExisteException("Catequisando nao encontrado: " + id);
+            throw new CatequisandoNaoEncontradoException("Catequisando nao encontrado: " + id);
         }
         return catequisando;
     }
@@ -87,7 +85,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public void cadastrarTurma(Turma turma)
-            throws CatequisandoNaoExisteException, CatequistaNaoExisteException {
+            throws CatequisandoNaoEncontradoException, CatequistaNaoEncontradoException {
 
         pesquisarCatequisandoPorId(turma.getCatequisando().getId());
         pesquisarCatequistaPorId(turma.getCatequista().getId());
@@ -95,11 +93,11 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public void removerTurma(String idTurma) throws TurmaNaoExisteException {
+    public void removerTurma(String idTurma) throws TurmaNaoEncontradoException {
         Turma turma = turmas.get(idTurma);
 
         if (turma == null) {
-            throw new TurmaNaoExisteException(
+            throw new TurmaNaoEncontradoException(
                     "Turma nao encontrada: " + idTurma
             );
         }
@@ -115,12 +113,12 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public List<Turma> pesquisarTurmaPorId(String idTurma)
-            throws TurmaNaoExisteException {
+            throws TurmaNaoEncontradoException {
 
         Turma turma = turmas.get(idTurma);
 
         if (turma == null) {
-            throw new TurmaNaoExisteException(
+            throw new TurmaNaoEncontradoException(
                     "Turma nao encontrada: " + idTurma
             );
         }
@@ -133,7 +131,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public List<Turma> pesquisarTurmaPorTipo(String tipoTurma)
-            throws TurmaNaoExisteException {
+            throws TurmaNaoEncontradoException {
 
         List<Turma> resultado = new ArrayList<>();
 
@@ -144,7 +142,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         }
 
         if (resultado.isEmpty()) {
-            throw new TurmaNaoExisteException(
+            throw new TurmaNaoEncontradoException(
                     "Nenhuma turma encontrada do tipo: " + tipoTurma
             );
         }
@@ -153,14 +151,14 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public List<Turma> pesquisarTurmaPorCatequista(String catequistaId) throws CatequistaNaoExisteException, TurmaNaoExisteException {
+    public List<Turma> pesquisarTurmaPorCatequista(String catequistaId) throws CatequistaNaoEncontradoException, TurmaNaoEncontradoException {
         return turmas.values().stream()
                 .filter(c -> c.getCatequista().getId().equals(catequistaId))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId) throws CatequisandoNaoExisteException, TurmaNaoExisteException {
+    public List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId) throws CatequisandoNaoEncontradoException, TurmaNaoEncontradoException {
         return turmas.values().stream()
                 .filter(c -> c.getCatequisando().getId().equals(catequisandoId))
                 .collect(Collectors.toList());
