@@ -4,8 +4,8 @@ public class Catequisando extends Usuario{
 
     private Turma turma;
 
-    public Catequisando(String id, String nome, int idade, Turma turma) {
-        super(id, nome, idade);
+    public Catequisando(String id, String nome, int idade, String senha, Turma turma) {
+        super(id, nome, idade, senha);
         this.turma = turma;
     }
 
