@@ -4,7 +4,7 @@ import java.util.List;
 
 import exception.CatequisandoNaoEncontradoException;
 import exception.CatequistaNaoEncontradoException;
-import exception.TurmaNaoEncontradoException;
+import exception.TurmaNaoEncontradaException;
 
 import model.Administrador;
 import model.Catequisando;
@@ -36,7 +36,8 @@ public interface SistemaEvangelizare {
 
     // Catequisando
 
-    void cadastrarCatequisando(Catequisando catequisando);
+    void cadastrarCatequisando(Catequisando catequisando)
+            throws TurmaNaoEncontradaException;
 
     void removerCatequisando(String id)
             throws CatequisandoNaoEncontradoException;
@@ -52,19 +53,19 @@ public interface SistemaEvangelizare {
             throws CatequistaNaoEncontradoException;
 
     void removerTurma(String idTurma)
-            throws TurmaNaoEncontradoException;
+            throws TurmaNaoEncontradaException;
 
     List<Turma> pesquisarTurmaPorId(String idTurma)
-            throws TurmaNaoEncontradoException;
+            throws TurmaNaoEncontradaException;
 
     List<Turma> pesquisarTurmaPorTipo(String tipoTurma)
-            throws TurmaNaoEncontradoException;
+            throws TurmaNaoEncontradaException;
 
     List<Turma> pesquisarTurmaPorCatequista(String catequistaId)
             throws CatequistaNaoEncontradoException,
-            TurmaNaoEncontradoException;
+            TurmaNaoEncontradaException;
 
     List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId)
             throws CatequisandoNaoEncontradoException,
-            TurmaNaoEncontradoException;
+            TurmaNaoEncontradaException;
 }

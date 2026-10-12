@@ -1,11 +1,12 @@
 package ui;
 
+import java.util.List;
 import java.util.Scanner;
 
-import model.Administrador;
-import model.Catequista;
-import model.Catequisando;
-import model.Usuario;
+import exception.CatequistaNaoEncontradoException;
+import exception.TurmaNaoEncontradaException;
+
+import model.*;
 import service.SistemaEvangelizare;
 import service.SistemaEvangelizareMap;
 
@@ -147,6 +148,7 @@ public class TelaPrincipal {
         System.out.print("Escolha uma opção: ");
 
         int perfil = scanner.nextInt();
+        scanner.nextLine();
 
         switch (perfil) {
             case 1:
@@ -176,7 +178,8 @@ public class TelaPrincipal {
     // CADASTRAR CATEQUISTA
 
     private void cadastrarCatequista(Scanner scanner) {
-        System.out.println("\n========== CADASTRO DE CATEQUISTA ==========");
+        System.out.println("\n========== CADASTRO DO CATEQUISTA ==========");
+        scanner.nextLine();
 
         System.out.println("ID do catequista: ");
         String id = scanner.nextLine();
@@ -212,6 +215,48 @@ public class TelaPrincipal {
         }
     }
 
+    // CADASTRO DE CATEQUISANDO
+
+    private void cadastrarCatequisando(Scanner scanner) {
+        System.out.println("\n========== CADASTRO DE CATEQUISANDO ==========");
+
+        System.out.println("Digite o ID do catequisando: ");
+        String id = scanner.nextLine();
+
+        System.out.println("Digite o nome do catequisando: ");
+        String nome = scanner.nextLine();
+
+        System.out.println("Digite a idade: ");
+        int idade = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.println("Digite a senha: ");
+        String senha = scanner.nextLine();
+
+        System.out.println("Digite o ID da turma: ");
+        String idTurma = scanner.nextLine();
+
+        try {
+            List<Turma> turmasEncontradas =
+                    sistema.pesquisarTurmaPorId(idTurma);
+
+            Turma turma = turmasEncontradas.get(0);
+
+            Catequisando catequisando = new Catequisando(
+                    id, nome, idade, senha, turma
+            );
+
+            sistema.cadastrarCatequisando(catequisando);
+
+            System.out.println(
+                    "Catequisando cadastrado com sucesso!"
+            );
+
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     // CADASTRO DE TURMA
 
     private void cadastrarTurma(Scanner scanner) {
@@ -223,28 +268,58 @@ public class TelaPrincipal {
         System.out.print("Escolha uma opção: ");
 
         int etapaTurma = scanner.nextInt();
+        scanner.nextLine();
+
+        TipoTurma tipoTurma = null;
 
         switch (etapaTurma) {
             case 1:
                 System.out.println("Etapa selecionada: Catequese Infantil.");
-                //TODO
+                tipoTurma = TipoTurma.CATEQUESE;
                 break;
 
             case 2:
                 System.out.println("Etapa selecionada: Crisma Jovem.");
-                //TODO
+                tipoTurma = TipoTurma.CRISMA_JOVEM;
                 break;
 
             case 3:
                 System.out.println("Etapa selecionada: Crisma Adulto.");
-                //TODO
+                tipoTurma = TipoTurma.CRISMA_ADULTO;
                 break;
 
             case 0:
+                System.out.println("Retornando ao menu...");
                 break;
 
             default:
                 System.out.println("Opção inválida.");
+                return;
+        }
+
+        System.out.println("Digite o ID da turma: ");
+        String idTurma = scanner.nextLine();
+
+        System.out.println("Digite o ID do catequista responsável: ");
+        String catequistaId = scanner.nextLine();
+
+        try {
+            Catequista catequista = sistema.pesquisarCatequistaPorId(catequistaId);
+
+            Turma turma = new Turma(idTurma, tipoTurma, catequista);
+
+            sistema.cadastrarTurma(turma);
+
+            System.out.println("Turma cadastrada com sucesso!");
+
+        } catch (CatequistaNaoEncontradoException e) {
+            System.out.println(e.getMessage());
+
+        } catch (TurmaNaoEncontradaException e) {
+            System.out.println(e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
         }
     }
 
