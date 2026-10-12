@@ -31,6 +31,8 @@ public class TelaPrincipal {
         System.out.println("================================");
         System.out.println("Bem-vindo ao Evangelizare!");
 
+        // MENU PRINCIPAL
+
         do {
             System.out.println("\n========== MENU PRINCIPAL ==========");
             System.out.println("1 - Entrar");
@@ -66,6 +68,8 @@ public class TelaPrincipal {
         scanner.close();
     }
 
+    // AUTENTIFICAÇÃO DO USUARIO
+
     private void autentificarUsuario(Scanner scanner) {
         scanner.nextLine();
 
@@ -84,19 +88,55 @@ public class TelaPrincipal {
             System.out.println("Bem-vindo(a), " + usuario.getNome() + "!");
 
             if (usuario instanceof Administrador) {
-                System.out.println("Perfil: Administrador");
+                menuAdministrador(scanner);
 
             } else if (usuario instanceof Catequista) {
                 System.out.println("Perfil: Catequista");
+                //TODO
 
             } else if (usuario instanceof Catequisando) {
                 System.out.println("Perfil: Catequisando");
+                //TODO
             }
 
         } else {
             System.out.println("\nID ou senha incorretos.");
         }
     }
+
+    // MENU DO ADMINISTRADOR
+
+    private void menuAdministrador(Scanner scanner) {
+        int opcao;
+
+        do {
+            System.out.println("\n========== MENU DO ADMINISTRADOR ==========");
+            System.out.println("1 - Cadastrar Usuário");
+            System.out.println("2 - Cadastrar Turma");
+            System.out.println("0 - Encerrar sessão");
+
+            opcao = scanner.nextInt();
+
+            switch (opcao) {
+                case 1:
+                    cadastrarUsuario(scanner);
+                    break;
+
+                case 2:
+                    cadastrarTurma(scanner);
+                    break;
+
+                case 0:
+                    System.out.println("Sessão encerrada");
+                    break;
+
+                default:
+                    System.out.println("Opção inválida");
+            }
+        } while (opcao != 0);
+    }
+
+    // CADASTRO DE USUÁRIO
 
     private void cadastrarUsuario(Scanner scanner) {
         System.out.println("\n========== CADASTRO DE USUÁRIO ==========");
@@ -111,7 +151,7 @@ public class TelaPrincipal {
         switch (perfil) {
             case 1:
                 System.out.println("Perfil selecionado: Catequista.");
-                //TODO
+                cadastrarCatequista(scanner);
                 break;
 
             case 2:
@@ -125,10 +165,50 @@ public class TelaPrincipal {
                 break;
 
             case 0:
+                System.out.println("Retornando ao menu do administrador...");
                 break;
 
             default:
                 System.out.println("Opção de perfil inválida.");
+        }
+    }
+
+    // CADASTRAR CATEQUISTA
+
+    private void cadastrarCatequista(Scanner scanner) {
+        System.out.println("\n========== CADASTRO DE CATEQUISTA ==========");
+
+        System.out.println("ID do catequista: ");
+        String id = scanner.nextLine();
+
+        System.out.println("Nome: ");
+        String nome = scanner.nextLine();
+
+        System.out.println("Idade: ");
+        int idade = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.println("Senha: ");
+        String senha = scanner.nextLine();
+
+        System.out.println("Ano de ingresso na catequese: ");
+        String anoIngresso = scanner.nextLine();
+
+        Catequista catequista = new Catequista(
+                id,
+                nome,
+                idade,
+                senha,
+                anoIngresso
+        );
+
+        try {
+            sistema.cadastrarCatequista(catequista);
+
+            System.out.println("\nCatequista cadastrado com sucesso!");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("\nNao foi possível cadastrar: " + e.getMessage());
         }
     }
 
