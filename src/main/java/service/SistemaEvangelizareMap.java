@@ -98,12 +98,26 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public void cadastrarTurma(Turma turma)
-            throws CatequisandoNaoEncontradoException, CatequistaNaoEncontradoException {
+            throws CatequisandoNaoEncontradoException {
 
-        pesquisarCatequisandoPorId(turma.getCatequisando().getId());
-        pesquisarCatequistaPorId(turma.getCatequista().getId());
+        if (turma == null) {
+            throw new IllegalArgumentException(
+                    "A turma não pode ser nula"
+            );
+        }
+
+        if (turma.getIdTurma() == null
+            || turma.getIdTurma().isBlank()) {
+        throw new IllegalArgumentException(
+                "O ID da turma é obrigatório."
+        );
+    }
+
+        pesquisarCatequisandoPorId(turma.getCatequista().getId());
+
         turmas.put(turma.getIdTurma(), turma);
     }
+
 
     @Override
     public void removerTurma(String idTurma) throws TurmaNaoEncontradoException {
@@ -111,18 +125,20 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         if (turma == null) {
             throw new TurmaNaoEncontradoException(
-                    "Turma nao encontrada: " + idTurma
+                    "Turma não encontrada: " + idTurma
             );
         }
 
-        Catequisando catequisando = turma.getCatequisando();
-
-        if (catequisando != null) {
-            catequisando.setTurma(null);
+        for (Catequisando catequisando : catequisandos.values()) {
+            if (catequisando.getTurma() != null
+                    && catequisando.getTurma().getIdTurma().equals(idTurma)) {
+                catequisando.setTurma(null);
+            }
         }
 
         turmas.remove(idTurma);
     }
+
 
     @Override
     public List<Turma> pesquisarTurmaPorId(String idTurma)
@@ -170,12 +186,24 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                 .collect(Collectors.toList());
     }
 
+
     @Override
-    public List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId) throws CatequisandoNaoEncontradoException, TurmaNaoEncontradoException {
-        return turmas.values().stream()
-                .filter(c -> c.getCatequisando().getId().equals(catequisandoId))
-                .collect(Collectors.toList());
+    public List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId)
+            throws CatequisandoNaoEncontradoException,
+            TurmaNaoEncontradoException {
+
+        Catequisando catequisando =
+                pesquisarCatequisandoPorId(catequisandoId);
+
+        Turma turma = catequisando.getTurma();
+
+        if (turma == null) {
+            throw new TurmaNaoEncontradoException("Turma não encontrada!");
+        }
+
+        return List.of(turma);
     }
+
 
 
     // USÚARIOS E AUTENTIFICAÇÃO

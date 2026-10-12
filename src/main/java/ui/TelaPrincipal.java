@@ -156,7 +156,7 @@ public class TelaPrincipal {
 
             case 2:
                 System.out.println("Perfil selecionado: Catequisando.");
-                //TODO
+                cadastrarCatequisando(scanner);
                 break;
 
             case 3:
@@ -211,6 +211,8 @@ public class TelaPrincipal {
             System.out.println("\nNao foi possível cadastrar: " + e.getMessage());
         }
     }
+
+    // CADASTRO DE TURMA
 
     private void cadastrarTurma(Scanner scanner) {
         System.out.println("\n========== CADASTRO DE TURMA ==========");
