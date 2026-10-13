@@ -93,7 +93,7 @@ public class TelaPrincipal {
 
             } else if (usuario instanceof Catequista) {
                 System.out.println("Perfil: Catequista");
-                //TODO
+                menuCatequista(scanner);
 
             } else if (usuario instanceof Catequisando) {
                 System.out.println("Perfil: Catequisando");
@@ -134,6 +134,36 @@ public class TelaPrincipal {
                 default:
                     System.out.println("Opção inválida");
             }
+        } while (opcao != 0);
+    }
+
+    // MENU CATEQUISTA
+
+    private void menuCatequista(Scanner scanner) {
+        int opcao;
+
+        do {
+            System.out.println("\n========== MENU DO CATEQUISTA ==========");
+            System.out.println("1 - Cadastrar Catequisando");
+            System.out.println("0 - Encerrar sessão");
+            System.out.println("Escolha uma opção: ");
+
+            opcao = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcao) {
+                case 1:
+                    cadastrarCatequisando(scanner);
+                    break;
+
+                case 0:
+                    System.out.println("Sessão encerrada.");
+                    break;
+
+                default:
+                    System.out.println("Opção inválida.");
+            }
+
         } while (opcao != 0);
     }
 
