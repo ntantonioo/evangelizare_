@@ -91,9 +91,9 @@ public class TelaPrincipal {
             if (usuario instanceof Administrador) {
                 menuAdministrador(scanner);
 
-            } else if (usuario instanceof Catequista) {
+            } else if (usuario instanceof Catequista catequista) {
                 System.out.println("Perfil: Catequista");
-                menuCatequista(scanner);
+                menuCatequista(scanner, catequista);
 
             } else if (usuario instanceof Catequisando) {
                 System.out.println("Perfil: Catequisando");
@@ -139,7 +139,7 @@ public class TelaPrincipal {
 
     // MENU CATEQUISTA
 
-    private void menuCatequista(Scanner scanner) {
+    private void menuCatequista(Scanner scanner, Catequista catequista) {
         int opcao;
 
         do {
@@ -153,7 +153,7 @@ public class TelaPrincipal {
 
             switch (opcao) {
                 case 1:
-                    cadastrarCatequisando(scanner);
+                    cadastrarCatequisando(scanner, catequista);
                     break;
 
                 case 0:
@@ -187,8 +187,7 @@ public class TelaPrincipal {
                 break;
 
             case 2:
-                System.out.println("Perfil selecionado: Catequisando.");
-                cadastrarCatequisando(scanner);
+                System.out.println("O cadastro de catequisandos deve ser realizado pelo catequista responsável");
                 break;
 
             case 3:
@@ -247,42 +246,68 @@ public class TelaPrincipal {
 
     // CADASTRO DE CATEQUISANDO
 
-    private void cadastrarCatequisando(Scanner scanner) {
+    private void cadastrarCatequisando(
+            Scanner scanner, Catequista catequista) {
+
         System.out.println("\n========== CADASTRO DE CATEQUISANDO ==========");
 
-        System.out.println("Digite o ID do catequisando: ");
-        String id = scanner.nextLine();
-
-        System.out.println("Digite o nome do catequisando: ");
-        String nome = scanner.nextLine();
-
-        System.out.println("Digite a idade: ");
-        int idade = scanner.nextInt();
-        scanner.nextLine();
-
-        System.out.println("Digite a senha: ");
-        String senha = scanner.nextLine();
-
-        System.out.println("Digite o ID da turma: ");
-        String idTurma = scanner.nextLine();
-
         try {
-            List<Turma> turmasEncontradas =
-                    sistema.pesquisarTurmaPorId(idTurma);
+            List<Turma> turmasDisponiveis = sistema.pesquisarTurmaPorCatequista(catequista.getId());
 
-            Turma turma = turmasEncontradas.get(0);
+            System.out.println("\nTurmas disponíveis:");
 
-            Catequisando catequisando = new Catequisando(
-                    id, nome, idade, senha, turma
+            for (Turma turma : turmasDisponiveis) {
+                System.out.println(
+                        "ID: " + turma.getIdTurma()
+                        + " | Tipo: " + turma.getTipoTurma()
+                );
+            }
+
+            System.out.println("\nDigite o ID do catequisando: ");
+            String id = scanner.nextLine();
+
+            System.out.println("Digite o nome do catequisando: ");
+            String nome = scanner.nextLine();
+
+            System.out.println("Digite a idade: ");
+            int idade = scanner.nextInt();
+            scanner.nextLine();
+
+            System.out.println("Digite a senha: ");
+            String senha = scanner.nextLine();
+
+            System.out.println("Digite o ID da turma: ");
+            String idTurma = scanner.nextLine();
+
+            Turma turmaSelecionada = null;
+
+            for (Turma turma : turmasDisponiveis) {
+                if (turma.getIdTurma().equals(idTurma)) {
+                    turmaSelecionada = turma;
+                    break;
+                }
+            }
+
+            if (turmaSelecionada == null) {
+                System.out.println(
+                        "A turma  infomrada não pertence a você."
+                );
+                return;
+            }
+
+            Catequisando novoCatequisando = new Catequisando(
+                    id, nome, idade, senha, turmaSelecionada
             );
 
-            sistema.cadastrarCatequisando(catequisando);
+            sistema.cadastrarCatequisando(novoCatequisando);
 
-            System.out.println(
-                    "Catequisando cadastrado com sucesso!"
-            );
+            System.out.println("Catequisando cadastrado com sucesso!");
 
-        } catch (IllegalArgumentException e) {
+        } catch (CatequistaNaoEncontradoException | TurmaNaoEncontradaException e) {
+
+            System.out.println(e.getMessage());
+
+        }  catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
     }
