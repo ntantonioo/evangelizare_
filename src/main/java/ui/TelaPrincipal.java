@@ -95,9 +95,9 @@ public class TelaPrincipal {
                 System.out.println("Perfil: Catequista");
                 menuCatequista(scanner, catequista);
 
-            } else if (usuario instanceof Catequisando) {
+            } else if (usuario instanceof Catequisando catequisando) {
                 System.out.println("Perfil: Catequisando");
-                //TODO
+                menuCatequisando(scanner, catequisando);
             }
 
         } else {
@@ -165,6 +165,64 @@ public class TelaPrincipal {
             }
 
         } while (opcao != 0);
+    }
+
+    //MENU CATEQUISANDO
+
+    private void menuCatequisando(Scanner scanner, Catequisando catequisando) {
+
+        int opcao;
+
+        do {
+            System.out.println("\n========== MENU DO CATEQUISANDO ==========");
+            System.out.println("1 - Consultar minha turma");
+            System.out.println("2 - Consultar notícias");
+            System.out.println("0 - Encerrar sessão");
+            System.out.print("Escolha uma opção: ");
+
+            opcao = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcao) {
+                case 1:
+                    consultarMinhaTurma(catequisando);
+                    break;
+
+                case 2:
+                    System.out.println("Consulta de notícias em integração.");
+                    break;
+
+                case 0:
+                    System.out.println("Sessão encerrada.");
+
+                default:
+                    System.out.println("Opção inválida.");
+            }
+
+        } while (opcao != 0);
+    }
+
+    // CONSULTAR MINHA TURMA
+
+    private void consultarMinhaTurma(Catequisando catequisando) {
+        Turma turma = catequisando.getTurma();
+
+        System.out.println("\n========== MINHA TURMA ==========");
+
+        if (turma == null) {
+            System.out.println("Você não está associado a nenhuma turma.");
+            return;
+        }
+
+        System.out.println("ID da turma: " + turma.getIdTurma());
+        System.out.println("Tipo: " + turma.getTipoTurma());
+
+        if (turma.getCatequista() != null) {
+            System.out.println(
+                    "Catequista responsável: "
+                    + turma.getCatequista().getNome()
+            );
+        }
     }
 
     // CADASTRO DE USUÁRIO
