@@ -9,12 +9,15 @@ import java.util.stream.Collectors;
 import exception.CatequistaNaoEncontradoException;
 import exception.CatequisandoNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
+import exception.NoticiaNaoEncontradaException;
 
 import model.Administrador;
 import model.Usuario;
 import model.Catequisando;
 import model.Catequista;
 import model.Turma;
+import model.Noticia;
+import model.TipoNoticia;
 
 public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
@@ -23,6 +26,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     private Map<String, Catequista> catequistas = new HashMap<>();
     private Map<String, Catequisando> catequisandos = new HashMap<>();
     private Map<String, Turma> turmas = new HashMap<>();
+    private Map<String, Noticia> noticias = new HashMap<>();
 
     //CATEQUISTA
 
@@ -277,5 +281,83 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                     "Já existe um usuário cadastrado com esse ID."
             );
         }
+    }
+
+    // NOTÍCIAS
+
+    @Override
+    public void cadastrarNoticia(Noticia noticia) {
+        if (noticia == null) {
+            throw new IllegalArgumentException(
+                    "A notícia não pode ser nula."
+            );
+        }
+
+        if (noticia.getIdNoticia() == null || noticia.getIdNoticia().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ID da noticia é obrigatório."
+            );
+        }
+
+        if (noticias.containsKey(noticia.getIdNoticia())) {
+            throw new IllegalArgumentException(
+                    "Já existe uma notícia cadastrada com esse ID."
+            );
+        }
+
+        noticias.put(noticia.getIdNoticia(), noticia);
+    }
+
+    @Override
+    public void removerNoticia(String idNoticia)
+        throws NoticiaNaoEncontradaException {
+
+        Noticia noticia = noticias.get(idNoticia);
+
+        if (noticia == null) {
+            throw new NoticiaNaoEncontradaException(
+                    "Notícia não encontrada: " + idNoticia
+            );
+        }
+
+        noticias.remove(idNoticia);
+    }
+
+    @Override
+    public Noticia pesquisarNoticiaPorId(String idNoticia)
+        throws NoticiaNaoEncontradaException {
+
+        Noticia noticia = noticias.get(idNoticia);
+
+        if (noticia == null) {
+            throw new NoticiaNaoEncontradaException(
+                    "Noticia não encontrada: " + idNoticia
+            );
+        }
+
+        return noticia;
+    }
+
+    @Override
+    public List<Noticia> pesquisarNoticiaPorTipo(TipoNoticia tipoNoticia)
+        throws NoticiaNaoEncontradaException {
+
+        if (tipoNoticia == null) {
+            throw new IllegalArgumentException(
+                    "O tipo da notícia não pode ser nulo."
+            );
+        }
+
+        List<Noticia> resultado = noticias.values().stream()
+                .filter(noticia -> noticia.getTipoNoticia() == tipoNoticia)
+                .collect(Collectors.toList());
+
+        if (resultado.isEmpty()) {
+            throw new NoticiaNaoEncontradaException(
+                    "Nenhuma notícia encontrada para o tipo: " + tipoNoticia
+            );
+        }
+
+        return resultado;
     }
 }

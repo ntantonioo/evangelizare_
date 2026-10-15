@@ -5,7 +5,10 @@ import java.util.List;
 import exception.CatequisandoNaoEncontradoException;
 import exception.CatequistaNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
+import exception.NoticiaNaoEncontradaException;
 
+import model.Noticia;
+import model.TipoNoticia;
 import model.Administrador;
 import model.Catequisando;
 import model.Catequista;
@@ -68,4 +71,17 @@ public interface SistemaEvangelizare {
     List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId)
             throws CatequisandoNaoEncontradoException,
             TurmaNaoEncontradaException;
+
+    // Noticias
+
+    void cadastrarNoticia(Noticia noticia);
+
+    void removerNoticia(String idNoticia)
+            throws NoticiaNaoEncontradaException;
+
+    Noticia pesquisarNoticiaPorId(String idNoticia)
+        throws NoticiaNaoEncontradaException;
+
+    List<Noticia> pesquisarNoticiaPorTipo(TipoNoticia tipoNoticia)
+        throws NoticiaNaoEncontradaException;
 }
