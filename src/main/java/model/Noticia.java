@@ -1,32 +1,33 @@
-
 package model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Noticia {
 
     private String idNoticia;
     private String titulo;
     private String conteudo;
-    private String autor;
-    private LocalDate dataPublicacao;
+    private TipoNoticia tipoNoticia;
+    private LocalDateTime dataPublicacao;
+    private Usuario autor;
 
-    public Noticia(String idNoticia, String titulo, String conteudo,
-                   String autor, LocalDate dataPublicacao) {
-
+    public Noticia(
+            String idNoticia,
+            String titulo,
+            String conteudo,
+            TipoNoticia tipoNoticia,
+            Usuario autor
+    ) {
         this.idNoticia = idNoticia;
         this.titulo = titulo;
         this.conteudo = conteudo;
+        this.tipoNoticia = tipoNoticia;
         this.autor = autor;
-        this.dataPublicacao = dataPublicacao;
+        this.dataPublicacao = LocalDateTime.now();
     }
 
     public String getIdNoticia() {
         return idNoticia;
-    }
-
-    public void setIdNoticia(String idNoticia) {
-        this.idNoticia = idNoticia;
     }
 
     public String getTitulo() {
@@ -45,30 +46,30 @@ public class Noticia {
         this.conteudo = conteudo;
     }
 
-    public String getAutor() {
-        return autor;
+    public TipoNoticia getTipoNoticia() {
+        return tipoNoticia;
     }
 
-    public void setAutor(String autor) {
-        this.autor = autor;
+    public void setTipoNoticia(TipoNoticia tipoNoticia) {
+        this.tipoNoticia = tipoNoticia;
     }
 
-    public LocalDate getDataPublicacao() {
+    public LocalDateTime getDataPublicacao() {
         return dataPublicacao;
     }
 
-    public void setDataPublicacao(LocalDate dataPublicacao) {
-        this.dataPublicacao = dataPublicacao;
+    public Usuario getAutor() {
+        return autor;
     }
 
     @Override
     public String toString() {
         return "Noticia{" +
-                "idNoticia='" + idNoticia + '\'' +
+                "id='" + idNoticia + '\'' +
                 ", titulo='" + titulo + '\'' +
-                ", conteudo='" + conteudo + '\'' +
-                ", autor='" + autor + '\'' +
+                ", tipoNoticia=" + tipoNoticia +
                 ", dataPublicacao=" + dataPublicacao +
+                ", autor=" + (autor != null ? autor.getNome() : "Não informado") +
                 '}';
     }
 }
