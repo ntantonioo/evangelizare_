@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import exception.CatequistaNaoEncontradoException;
+import exception.NoticiaNaoEncontradaException;
 import exception.TurmaNaoEncontradaException;
 
 import model.*;
@@ -106,7 +107,7 @@ public class TelaPrincipal {
 
     // MENU DO ADMINISTRADOR
 
-    private void menuAdministrador(Scanner scanner, Usuario usuario) {
+    private void menuAdministrador(Scanner scanner, Usuario usuarioLogado) {
         int opcao;
 
         do {
@@ -209,6 +210,273 @@ public class TelaPrincipal {
             }
 
         } while (opcao != 0);
+    }
+
+    // MENU NOTICIAS
+
+
+    private void menuNoticias(Scanner scanner, Usuario usuarioLogado) {
+        int opcao;
+
+        do {
+            System.out.println("\n========== MENU DE NOTÍCIAS ==========");
+
+            if (usuarioLogado instanceof Administrador) {
+                System.out.println("1 - Cadastrar notícia");
+                System.out.println("2 - Consultar notícias");
+                System.out.println("3 - Remover notícia");
+
+            } else if (usuarioLogado instanceof Catequista) {
+                System.out.println("1 - Cadastrar notícia");
+                System.out.println("2 - Consultar notícias");
+
+            } else if (usuarioLogado instanceof Catequisando) {
+                System.out.println("1 - Consultar notícias");
+            }
+
+            System.out.println("0 - Voltar");
+            System.out.print("Escolha uma opção: ");
+
+            opcao = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcao) {
+                case 1:
+                    if (usuarioLogado instanceof Administrador
+                            || usuarioLogado instanceof Catequista) {
+                        cadastrarNoticia(scanner, usuarioLogado);
+                    } else if (usuarioLogado instanceof Catequisando) {
+                        consultarNoticias();
+                    }
+                    break;
+
+                case 2:
+                    if (usuarioLogado instanceof Administrador
+                            || usuarioLogado instanceof Catequista) {
+                        consultarNoticias();
+                    } else {
+                        System.out.println("Opção inválida.");
+                    }
+                    break;
+
+                case 3:
+                    if (usuarioLogado instanceof Administrador) {
+                        removerNoticia(scanner, usuarioLogado);
+                    } else {
+                        System.out.println("Opção inválida.");
+                    }
+                    break;
+
+                case 0:
+                    System.out.println("Retornando ao menu anterior...");
+                    break;
+
+                default:
+                    System.out.println("Opção inválida.");
+            }
+
+        } while (opcao != 0);
+    }
+
+
+    private void consultarNoticias() {
+        System.out.println("\n========== NOTÍCIAS ==========");
+
+        boolean encontrouNoticia = false;
+
+        for (TipoNoticia tipo : TipoNoticia.values()) {
+            try {
+                List<Noticia> noticias = sistema.pesquisarNoticiaPorTipo(tipo);
+
+                for (Noticia noticia : noticias) {
+                    System.out.println(noticia);
+                    encontrouNoticia = true;
+                }
+
+            } catch (NoticiaNaoEncontradaException e) {
+                // Não há notícias desta categoria.
+            }
+        }
+
+        if (!encontrouNoticia) {
+            System.out.println("Nenhuma notícia cadastrada.");
+        }
+    }
+
+
+    private void cadastrarNoticia(Scanner scanner, Usuario usuarioLogado) {
+        System.out.println("\n========== CADASTRO DE NOTÍCIA ==========");
+
+        System.out.print("ID da notícia: ");
+        String id = scanner.nextLine();
+
+        System.out.print("Título: ");
+        String titulo = scanner.nextLine();
+
+        System.out.print("Conteúdo: ");
+        String conteudo = scanner.nextLine();
+
+        // Escolher a categoria da notícia
+        System.out.println("\nCategorias disponíveis:");
+
+        TipoNoticia[] categorias = TipoNoticia.values();
+
+        for (int i = 0; i < categorias.length; i++) {
+            System.out.println((i + 1) + " - " + categorias[i]);
+        }
+
+        System.out.print("Escolha a categoria: ");
+        int opcaoCategoria = scanner.nextInt();
+        scanner.nextLine();
+
+        if (opcaoCategoria < 1 || opcaoCategoria > categorias.length) {
+            System.out.println("Categoria inválida.");
+            return;
+        }
+
+        TipoNoticia tipoNoticia = categorias[opcaoCategoria - 1];
+
+        Turma turmaSelecionada = null;
+
+        try {
+            // O administrador escolhe se a notícia será geral ou específica.
+            if (usuarioLogado instanceof Administrador) {
+                System.out.println("\n1 - Notícia geral");
+                System.out.println("2 - Notícia para uma turma específica");
+                System.out.print("Escolha uma opção: ");
+
+                int opcaoTurma = scanner.nextInt();
+                scanner.nextLine();
+
+                if (opcaoTurma == 1) {
+                    turmaSelecionada = null;
+
+                } else if (opcaoTurma == 2) {
+                    System.out.print("ID da turma: ");
+                    String idTurma = scanner.nextLine();
+
+                    List<Turma> turmas =
+                            sistema.pesquisarTurmaPorId(idTurma);
+
+                    if (turmas.isEmpty()) {
+                        System.out.println("Turma não encontrada.");
+                        return;
+                    }
+
+                    turmaSelecionada = turmas.get(0);
+
+                } else {
+                    System.out.println("Opção inválida.");
+                    return;
+                }
+
+                // O catequista só pode escolher uma de suas próprias turmas.
+            } else if (usuarioLogado instanceof Catequista catequista) {
+                List<Turma> turmas =
+                        sistema.pesquisarTurmaPorCatequista(catequista.getId());
+
+                if (turmas.isEmpty()) {
+                    System.out.println(
+                            "Você não possui turmas cadastradas."
+                    );
+                    return;
+                }
+
+                System.out.println("\nSuas turmas:");
+
+                for (Turma turma : turmas) {
+                    System.out.println(
+                            "ID: " + turma.getIdTurma()
+                                    + " | Tipo: " + turma.getTipoTurma()
+                    );
+                }
+
+                System.out.print("ID da turma: ");
+                String idTurma = scanner.nextLine();
+
+                for (Turma turma : turmas) {
+                    if (turma.getIdTurma().equals(idTurma)) {
+                        turmaSelecionada = turma;
+                        break;
+                    }
+                }
+
+                if (turmaSelecionada == null) {
+                    System.out.println(
+                            "A turma informada não pertence a você."
+                    );
+                    return;
+                }
+
+            } else {
+                System.out.println(
+                        "Você não tem permissão para cadastrar notícias."
+                );
+                return;
+            }
+
+            Noticia noticia = new Noticia(
+                    id,
+                    titulo,
+                    conteudo,
+                    tipoNoticia,
+                    usuarioLogado,
+                    turmaSelecionada
+            );
+
+            sistema.cadastrarNoticia(noticia, usuarioLogado);
+
+            System.out.println("\nNotícia cadastrada com sucesso!");
+
+        } catch (CatequistaNaoEncontradoException
+                 | TurmaNaoEncontradaException e) {
+
+            System.out.println("Erro ao localizar os dados: " + e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Não foi possível cadastrar: " + e.getMessage());
+        }
+    }
+
+
+    private void removerNoticia(Scanner scanner, Usuario usuarioLogado) {
+        System.out.println("\n========== REMOVER NOTÍCIA ==========");
+
+        // Proteção adicional na interface.
+        if (!(usuarioLogado instanceof Administrador)) {
+            System.out.println(
+                    "Somente o administrador pode remover notícias."
+            );
+            return;
+        }
+
+        System.out.print("Digite o ID da notícia que deseja remover: ");
+        String idNoticia = scanner.nextLine();
+
+        try {
+            // Verifica se a notícia existe antes de removê-la.
+            Noticia noticia = sistema.pesquisarNoticiaPorId(idNoticia);
+
+            System.out.println("\nNotícia selecionada:");
+            System.out.println(noticia);
+
+            System.out.print("Confirma a remoção? (S/N): ");
+            String confirmacao = scanner.nextLine();
+
+            if (confirmacao.equalsIgnoreCase("S")) {
+                sistema.removerNoticia(idNoticia, usuarioLogado);
+
+                System.out.println("Notícia removida com sucesso!");
+            } else {
+                System.out.println("Remoção cancelada.");
+            }
+
+        } catch (NoticiaNaoEncontradaException e) {
+            System.out.println("Não foi possível remover: " + e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Operação não permitida: " + e.getMessage());
+        }
     }
 
     // CONSULTAR MINHA TURMA
