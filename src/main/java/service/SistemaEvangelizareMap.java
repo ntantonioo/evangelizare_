@@ -457,52 +457,21 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public List<Noticia> pesquisarNoticiasDisponiveisPara(Usuario usuarioLogado)
-        throws NoticiaNaoEncontradaException {
+    public List<Noticia> pesquisarNoticiasDisponiveisPara(
+            Usuario usuarioLogado
+    ) throws NoticiaNaoEncontradaException {
 
         validarUsuarioLogado(usuarioLogado);
 
-        List<Noticia> resultado = noticias.values().stream()
-                .filter(noticia -> {
-
-                    Turma turmaNoticia = noticia.getTurma();
-
-                    // noticias gerais sao visiveis para todos
-                    if (turmaNoticia == null) {
-                        return true;
-                    }
-
-                    // admin pode consultar todas as noticias
-                    if (usuarioLogado instanceof Administrador) {
-                        return true;
-                    }
-
-                    // catequista pode consultar noticias das turmas que é responsavel
-                    if (usuarioLogado instanceof Catequista) {
-                        return turmaNoticia.getCatequista() != null
-                                && turmaNoticia.getCatequista()
-                                .getId().equals(usuarioLogado.getId());
-                    }
-
-                    // catequisando pode consultar noticias da propria turma
-                    if (usuarioLogado instanceof Catequisando catequisando) {
-                        Turma turmaCatequisando = catequisando.getTurma();
-
-                        return turmaCatequisando != null
-                                && turmaNoticia.getIdTurma()
-                                .equals(turmaCatequisando.getIdTurma());
-                    }
-
-                    return false;
-                })
-                .collect(Collectors.toList());
+        List<Noticia> resultado = new ArrayList<>(noticias.values());
 
         if (resultado.isEmpty()) {
             throw new NoticiaNaoEncontradaException(
-                    "Nenhuma notícia disponível para este usuário."
+                    "Nenhuma notícia cadastrada."
             );
         }
 
         return resultado;
     }
+
 }

@@ -244,15 +244,16 @@ public class TelaPrincipal {
                     if (usuarioLogado instanceof Administrador
                             || usuarioLogado instanceof Catequista) {
                         cadastrarNoticia(scanner, usuarioLogado);
+
                     } else if (usuarioLogado instanceof Catequisando) {
-                        consultarNoticias();
+                        consultarNoticias(usuarioLogado);
                     }
                     break;
 
                 case 2:
                     if (usuarioLogado instanceof Administrador
                             || usuarioLogado instanceof Catequista) {
-                        consultarNoticias();
+                        consultarNoticias(usuarioLogado);
                     } else {
                         System.out.println("Opção inválida.");
                     }
@@ -277,7 +278,7 @@ public class TelaPrincipal {
         } while (opcao != 0);
     }
 
-    private void consultarNoticias() {
+    private void consultarNoticias(Usuario usuarioLogado) {
         System.out.println("\n========== NOTÍCIAS ==========");
 
         boolean encontrouNoticia = false;
