@@ -74,9 +74,9 @@ public interface SistemaEvangelizare {
 
     // Noticias
 
-    void cadastrarNoticia(Noticia noticia);
+    void cadastrarNoticia(Noticia noticia, Usuario usuarioLogado);
 
-    void removerNoticia(String idNoticia)
+    void removerNoticia(String idNoticia, Usuario usuarioLogado)
             throws NoticiaNaoEncontradaException;
 
     Noticia pesquisarNoticiaPorId(String idNoticia)

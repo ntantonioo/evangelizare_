@@ -283,19 +283,42 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         }
     }
 
+    private void validarUsuarioLogado(Usuario usuarioLogado) {
+
+        if (usuarioLogado == null
+                || usuarioLogado.getId() == null) {
+            throw new IllegalArgumentException(
+                    "É necessário estar autenticado."
+            );
+        }
+
+        Usuario usuarioCadastrado =
+                usuarios.get(usuarioLogado.getId());
+
+        if (usuarioCadastrado != usuarioLogado) {
+            throw new IllegalArgumentException(
+                    "O usuário informado não está autenticado no sistema."
+            );
+        }
+    }
+
     // NOTÍCIAS
 
     @Override
-    public void cadastrarNoticia(Noticia noticia) {
+    public void cadastrarNoticia(Noticia noticia, Usuario usuarioLogado) {
+
+        validarUsuarioLogado(usuarioLogado);
+
         if (noticia == null) {
             throw new IllegalArgumentException(
                     "A notícia não pode ser nula."
             );
         }
 
-        if (noticia.getIdNoticia() == null || noticia.getIdNoticia().isBlank()) {
+        if (noticia.getIdNoticia() == null
+                || noticia.getIdNoticia().isBlank()) {
             throw new IllegalArgumentException(
-                    "O ID da noticia é obrigatório."
+                    "O ID da notícia é obrigatório."
             );
         }
 
@@ -305,12 +328,84 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
+        if (noticia.getTitulo() == null
+                || noticia.getTitulo().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O título da notícia é obrigatório."
+            );
+        }
+
+        if (noticia.getConteudo() == null
+                || noticia.getConteudo().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O conteúdo da notícia é obrigatório."
+            );
+        }
+
+        if (noticia.getTipoNoticia() == null) {
+            throw new IllegalArgumentException(
+                    "A categoria da notícia é obrigatória."
+            );
+        }
+
+        if (noticia.getAutor() != usuarioLogado) {
+            throw new IllegalArgumentException(
+                    "O autor da notícia deve ser o usuário logado."
+            );
+        }
+
+        Turma turma = noticia.getTurma();
+
+        if (turma != null) {
+            Turma turmaCadastrada = turmas.get(turma.getIdTurma());
+
+            if (turmaCadastrada == null || turmaCadastrada != turma) {
+                throw new IllegalArgumentException(
+                        "A turma informada não está cadastrada."
+                );
+            }
+        }
+
+        if (usuarioLogado instanceof Administrador) {
+
+        } else if (usuarioLogado instanceof Catequista) {
+
+            if (turma == null) {
+                throw new IllegalArgumentException(
+                        "O catequista deve informar sua turma."
+                );
+            }
+
+            if (turma.getCatequista() == null
+                    || !turma.getCatequista().getId()
+                    .equals(usuarioLogado.getId())) {
+                throw new IllegalArgumentException(
+                        "O catequista só pode publicar notícias para sua turma."
+                );
+            }
+
+        } else {
+            throw new IllegalArgumentException(
+                    "Este usuário não tem permissão para publicar notícias."
+            );
+        }
+
         noticias.put(noticia.getIdNoticia(), noticia);
     }
 
     @Override
-    public void removerNoticia(String idNoticia)
-        throws NoticiaNaoEncontradaException {
+    public void removerNoticia(
+            String idNoticia,
+            Usuario usuarioLogado
+    ) throws NoticiaNaoEncontradaException {
+
+        validarUsuarioLogado(usuarioLogado);
+
+        if (!(usuarioLogado instanceof Administrador)) {
+            throw new IllegalArgumentException(
+                    "Somente o administrador pode remover notícias."
+            );
+        }
 
         Noticia noticia = noticias.get(idNoticia);
 

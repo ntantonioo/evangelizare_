@@ -10,13 +10,15 @@ public class Noticia {
     private TipoNoticia tipoNoticia;
     private LocalDateTime dataPublicacao;
     private Usuario autor;
+    private Turma turma;
 
     public Noticia(
             String idNoticia,
             String titulo,
             String conteudo,
             TipoNoticia tipoNoticia,
-            Usuario autor
+            Usuario autor,
+            Turma turma
     ) {
         this.idNoticia = idNoticia;
         this.titulo = titulo;
@@ -24,6 +26,7 @@ public class Noticia {
         this.tipoNoticia = tipoNoticia;
         this.autor = autor;
         this.dataPublicacao = LocalDateTime.now();
+        this.turma = turma;
     }
 
     public String getIdNoticia() {
@@ -62,14 +65,24 @@ public class Noticia {
         return autor;
     }
 
+    public Turma getTurma() {
+        return turma;
+    }
+
     @Override
     public String toString() {
         return "Noticia{" +
-                "id='" + idNoticia + '\'' +
+                "idNoticia='" + idNoticia + '\'' +
                 ", titulo='" + titulo + '\'' +
                 ", tipoNoticia=" + tipoNoticia +
                 ", dataPublicacao=" + dataPublicacao +
-                ", autor=" + (autor != null ? autor.getNome() : "Não informado") +
+                ", autor=" + (autor != null
+                ? autor.getNome()
+                : "Não informado") +
+                ", turma=" + (turma != null
+                ? turma.getIdTurma()
+                : "Todas as turmas") +
                 '}';
     }
+
 }
