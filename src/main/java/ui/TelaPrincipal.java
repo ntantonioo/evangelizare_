@@ -37,7 +37,6 @@ public class TelaPrincipal {
         do {
             System.out.println("\n========== MENU PRINCIPAL ==========");
             System.out.println("1 - Entrar");
-            System.out.println("2 - Notícias");
             System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
 
@@ -89,7 +88,7 @@ public class TelaPrincipal {
             System.out.println("Bem-vindo(a), " + usuario.getNome() + "!");
 
             if (usuario instanceof Administrador) {
-                menuAdministrador(scanner);
+                menuAdministrador(scanner, usuario);
 
             } else if (usuario instanceof Catequista catequista) {
                 System.out.println("Perfil: Catequista");
@@ -107,13 +106,14 @@ public class TelaPrincipal {
 
     // MENU DO ADMINISTRADOR
 
-    private void menuAdministrador(Scanner scanner) {
+    private void menuAdministrador(Scanner scanner, Usuario usuario) {
         int opcao;
 
         do {
             System.out.println("\n========== MENU DO ADMINISTRADOR ==========");
             System.out.println("1 - Cadastrar Usuário");
             System.out.println("2 - Cadastrar Turma");
+            System.out.println("3 - Notícias");
             System.out.println("0 - Encerrar sessão");
 
             opcao = scanner.nextInt();
@@ -125,6 +125,10 @@ public class TelaPrincipal {
 
                 case 2:
                     cadastrarTurma(scanner);
+                    break;
+
+                case 3:
+                    menuNoticias(scanner, usuarioLogado);
                     break;
 
                 case 0:
@@ -145,6 +149,7 @@ public class TelaPrincipal {
         do {
             System.out.println("\n========== MENU DO CATEQUISTA ==========");
             System.out.println("1 - Cadastrar Catequisando");
+            System.out.println("2 - Notícias");
             System.out.println("0 - Encerrar sessão");
             System.out.println("Escolha uma opção: ");
 
@@ -154,6 +159,10 @@ public class TelaPrincipal {
             switch (opcao) {
                 case 1:
                     cadastrarCatequisando(scanner, catequista);
+                    break;
+
+                case 2:
+                    menuNoticias(scanner, catequista);
                     break;
 
                 case 0:
@@ -189,7 +198,7 @@ public class TelaPrincipal {
                     break;
 
                 case 2:
-                    System.out.println("Consulta de notícias em integração.");
+                    menuNoticias(scanner, catequisando);
                     break;
 
                 case 0:
