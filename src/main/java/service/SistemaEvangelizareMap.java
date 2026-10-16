@@ -122,7 +122,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public void cadastrarTurma(Turma turma)
-            throws CatequisandoNaoEncontradoException {
+            throws CatequistaNaoEncontradoException {
 
         if (turma == null) {
             throw new IllegalArgumentException(
@@ -137,11 +137,25 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         );
     }
 
-        pesquisarCatequisandoPorId(turma.getCatequista().getId());
+        if (turma.getCatequista() == null) {
+            throw new IllegalArgumentException(
+                    "A turma precisa ter um catequista responsável."
+            );
+        }
+
+        if (turmas.containsKey(turma.getIdTurma())) {
+            throw new IllegalArgumentException(
+                    "Já existe um turma com esse ID."
+            );
+        }
+
+        Catequista catequistaCadastrado = pesquisarCatequistaPorId(turma.getCatequista().getId());
+
+        // garante que a turma utilize o objeto cadastrado no sistema
+        turma.setCatequista(catequistaCadastrado);
 
         turmas.put(turma.getIdTurma(), turma);
     }
-
 
     @Override
     public void removerTurma(String idTurma) throws TurmaNaoEncontradaException {

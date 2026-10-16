@@ -572,7 +572,7 @@ public class TelaPrincipal {
         scanner.nextLine();
 
         System.out.println("ID do catequista: ");
-        String id = scanner.nextLine();
+        String idCatequista = scanner.nextLine();
 
         System.out.println("Nome: ");
         String nome = scanner.nextLine();
@@ -588,7 +588,7 @@ public class TelaPrincipal {
         String anoIngresso = scanner.nextLine();
 
         Catequista catequista = new Catequista(
-                id,
+                idCatequista,
                 nome,
                 idade,
                 senha,
@@ -729,9 +729,6 @@ public class TelaPrincipal {
             System.out.println("Turma cadastrada com sucesso!");
 
         } catch (CatequistaNaoEncontradoException e) {
-            System.out.println(e.getMessage());
-
-        } catch (TurmaNaoEncontradaException e) {
             System.out.println(e.getMessage());
 
         } catch (IllegalArgumentException e) {
