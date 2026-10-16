@@ -199,7 +199,7 @@ public class TelaPrincipal {
                     break;
 
                 case 2:
-                    menuNoticias(scanner, catequisando);
+                    consultarNoticias(catequisando);
                     break;
 
                 case 0:
@@ -213,7 +213,6 @@ public class TelaPrincipal {
     }
 
     // MENU NOTICIAS
-
 
     private void menuNoticias(Scanner scanner, Usuario usuarioLogado) {
         int opcao;
@@ -278,7 +277,6 @@ public class TelaPrincipal {
         } while (opcao != 0);
     }
 
-
     private void consultarNoticias() {
         System.out.println("\n========== NOTÍCIAS ==========");
 
@@ -302,7 +300,6 @@ public class TelaPrincipal {
             System.out.println("Nenhuma notícia cadastrada.");
         }
     }
-
 
     private void cadastrarNoticia(Scanner scanner, Usuario usuarioLogado) {
         System.out.println("\n========== CADASTRO DE NOTÍCIA ==========");
@@ -438,7 +435,6 @@ public class TelaPrincipal {
         }
     }
 
-
     private void removerNoticia(Scanner scanner, Usuario usuarioLogado) {
         System.out.println("\n========== REMOVER NOTÍCIA ==========");
 
@@ -499,6 +495,35 @@ public class TelaPrincipal {
                     "Catequista responsável: "
                     + turma.getCatequista().getNome()
             );
+        }
+    }
+
+    // CONSULTAR NOTICIAS
+
+    private void consultarNoticias(Catequisando catequisando) {
+        System.out.println("\n========== NOTÍCIAS ==========");
+
+        try {
+            List<Noticia> noticiasDisponiveis =
+                    sistema.pesquisarNoticiasDisponiveisPara(catequisando);
+
+            for (Noticia noticia : noticiasDisponiveis) {
+                System.out.println("\nTítulo: " + noticia.getTitulo());
+                System.out.println("Tipo: " + noticia.getTipoNoticia());
+                System.out.println("Conteúdo: " + noticia.getConteudo());
+                System.out.println("Data: " + noticia.getDataPublicacao());
+
+                System.out.println(
+                        "Autor: " + (noticia.getAutor() == null
+                                ? noticia.getAutor().getNome()
+                                : "Não informado")
+                );
+
+                System.out.println("--------------------------------");
+            }
+
+        } catch (NoticiaNaoEncontradaException e) {
+            System.out.println(e.getMessage());
         }
     }
 

@@ -84,4 +84,7 @@ public interface SistemaEvangelizare {
 
     List<Noticia> pesquisarNoticiaPorTipo(TipoNoticia tipoNoticia)
         throws NoticiaNaoEncontradaException;
+
+    List<Noticia> pesquisarNoticiasDisponiveisPara(Usuario usuarioLogado)
+        throws NoticiaNaoEncontradaException;
 }
