@@ -150,7 +150,8 @@ public class TelaPrincipal {
         do {
             System.out.println("\n========== MENU DO CATEQUISTA ==========");
             System.out.println("1 - Cadastrar Catequisando");
-            System.out.println("2 - Notícias");
+            System.out.println("2 - Consultar Catequisandos");
+            System.out.println("3 - Notícias");
             System.out.println("0 - Encerrar sessão");
             System.out.println("Escolha uma opção: ");
 
@@ -163,12 +164,15 @@ public class TelaPrincipal {
                     break;
 
                 case 2:
+                    consultarCatequisandos(scanner, catequista);
+                    break;
+
+                case 3:
                     menuNoticias(scanner, catequista);
                     break;
 
                 case 0:
-                    System.out.println("Sessão encerrada.");
-                    break;
+                    System.out.println("Sessão encerrada");
 
                 default:
                     System.out.println("Opção inválida.");
@@ -210,6 +214,74 @@ public class TelaPrincipal {
             }
 
         } while (opcao != 0);
+    }
+
+    // CONSULTA DE CATEQUISANDOS
+
+    private void consultarCatequisandos(
+            Scanner scanner, Catequista catequista) {
+
+        System.out.println("\\n========== CONSULTAR CATEQUISANDOS ==========");
+
+        try {
+            List<Turma> turmasDisponiveis =
+                    sistema.pesquisarTurmaPorCatequista(catequista.getId());
+
+            if (turmasDisponiveis.isEmpty()) {
+                System.out.println("Você não possui turmas cadastradas.");
+                return;
+            }
+
+            System.out.println("\nSuas turmas:");
+
+            for (Turma turma : turmasDisponiveis) {
+                System.out.println(
+                        "ID: " + turma.getIdTurma()
+                        + " | Tipo: " + turma.getTipoTurma()
+                );
+            }
+
+            System.out.println("\nDigite o ID da turma que deseja consultar: ");
+            String idTurma = scanner.nextLine().trim();
+
+            boolean turmaPermitida = turmasDisponiveis.stream()
+                    .anyMatch(t -> t.getIdTurma().equals(idTurma));
+
+            if (!turmaPermitida) {
+                System.out.println(
+                        "Você não tem permissão para consultar essa turma."
+                );
+                return;
+            }
+
+            // Busca os catequisandos vinculados à turma escolhida
+            List<Catequisando> catequisandos =
+                    sistema.pesquisarCatequisandosPorTurma(idTurma);
+
+            if (catequisandos.isEmpty()) {
+                System.out.println(
+                        "Nenhum catequisando cadastrado nesta turma."
+                );
+                return;
+            }
+
+            System.out.println("\nCatequisandos da turma:");
+
+            for (Catequisando c : catequisandos) {
+                System.out.println("------------------------------");
+                System.out.println("ID: " + c.getId());
+                System.out.println("Nome: " + c.getNome());
+                System.out.println("Telefone: " + c.getTelefone());
+                System.out.println("Idade: " + c.getIdade());
+                System.out.println(
+                        "Quantidade de responsáveis: "
+                                + c.getResponsaveis().size()
+                );
+            }
+
+        } catch (CatequistaNaoEncontradoException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
 
     // MENU NOTICIAS
