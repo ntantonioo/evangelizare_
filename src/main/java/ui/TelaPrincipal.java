@@ -577,6 +577,9 @@ public class TelaPrincipal {
         System.out.println("Nome: ");
         String nome = scanner.nextLine();
 
+        System.out.println("Telefone: ");
+        String telefone = scanner.nextLine();
+
         System.out.println("Idade: ");
         int idade = scanner.nextInt();
         scanner.nextLine();
@@ -590,6 +593,7 @@ public class TelaPrincipal {
         Catequista catequista = new Catequista(
                 idCatequista,
                 nome,
+                telefone,
                 idade,
                 senha,
                 anoIngresso
@@ -615,6 +619,11 @@ public class TelaPrincipal {
         try {
             List<Turma> turmasDisponiveis = sistema.pesquisarTurmaPorCatequista(catequista.getId());
 
+            if (turmasDisponiveis.isEmpty()) {
+                System.out.println("Você ainda não possui turmas cadastradas.");
+                return;
+            }
+
             System.out.println("\nTurmas disponíveis:");
 
             for (Turma turma : turmasDisponiveis) {
@@ -629,6 +638,9 @@ public class TelaPrincipal {
 
             System.out.println("Digite o nome do catequisando: ");
             String nome = scanner.nextLine();
+
+            System.out.println("Digite o telefone do catequisando: ");
+            String telefone = scanner.nextLine();
 
             System.out.println("Digite a idade: ");
             int idade = scanner.nextInt();
@@ -657,19 +669,71 @@ public class TelaPrincipal {
             }
 
             Catequisando novoCatequisando = new Catequisando(
-                    id, nome, idade, senha, turmaSelecionada
+                    id,
+                    nome,
+                    telefone,
+                    idade,
+                    senha,
+                    turmaSelecionada
             );
+
+            TipoTurma tipo = turmaSelecionada.getTipoTurma();
+
+            boolean exigeResponsavel =
+                    tipo == TipoTurma.CATEQUESE
+                    || tipo == TipoTurma.CRISMA_JOVEM;
+
+            boolean cadastrarResponsavel = exigeResponsavel;
+
+            if (!exigeResponsavel) {
+                System.out.println(
+                        "\nDeseja cadastrar um responsavel? (S/N):"
+                );
+
+                cadastrarResponsavel =
+                        scanner.nextLine().trim().equalsIgnoreCase("S");
+            }
+
+            while (cadastrarResponsavel) {
+                System.out.println("\n--- DADOS DO RESPONSÁVEL ---");
+
+                System.out.println("Nome do responsável: ");
+                String nomeResponsavel = scanner.nextLine();
+
+                System.out.println("Telefone do responsável: ");
+                String telefoneResponsavel = scanner.nextLine();
+
+                System.out.println("Parentesco: ");
+                String parentesco = scanner.nextLine();
+
+                Responsavel responsavel = new Responsavel(
+                        nomeResponsavel,
+                        telefoneResponsavel,
+                        parentesco
+                );
+
+                novoCatequisando.adicionarResponsavel(responsavel);
+
+                System.out.println(
+                        "\nDeseja cadastrar outro responsável? (S/N): "
+                );
+
+                cadastrarResponsavel =
+                        scanner.nextLine().trim().equalsIgnoreCase("S");
+            }
 
             sistema.cadastrarCatequisando(novoCatequisando);
 
-            System.out.println("Catequisando cadastrado com sucesso!");
+            System.out.println(
+                    "\nCatequisando cadastrado com sucesso!"
+            );
 
         } catch (CatequistaNaoEncontradoException | TurmaNaoEncontradaException e) {
 
             System.out.println(e.getMessage());
 
         }  catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Não foi possível cadastrar: " + e.getMessage());
         }
     }
 
@@ -740,6 +804,7 @@ public class TelaPrincipal {
         Administrador administrador = new Administrador(
                 "ADM001",
                 "Administrador",
+                "83999999999",
                 30,
                 "admin123"
         );

@@ -50,6 +50,8 @@ public interface SistemaEvangelizare {
 
     List<Catequisando> pesquisarCatequisandoPorNome(String nome);
 
+    List<Catequisando> pesquisarCatequisandosPorTurma(String idTurma);
+
     // Turma
 
     void cadastrarTurma(Turma turma)

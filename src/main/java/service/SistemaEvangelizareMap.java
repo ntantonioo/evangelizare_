@@ -11,13 +11,7 @@ import exception.CatequisandoNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 import exception.NoticiaNaoEncontradaException;
 
-import model.Administrador;
-import model.Usuario;
-import model.Catequisando;
-import model.Catequista;
-import model.Turma;
-import model.Noticia;
-import model.TipoNoticia;
+import model.*;
 
 public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
@@ -69,6 +63,12 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     public void cadastrarCatequisando(Catequisando catequisando)
             throws CatequisandoNaoEncontradoException {
 
+        if (catequisando == null) {
+            throw new IllegalArgumentException(
+                    "O catequisando não pode ser nulo"
+            );
+        }
+
         validarNovoUsuario(catequisando);
 
         if (catequisando.getTurma() == null) {
@@ -84,6 +84,20 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         if (turma == null) {
             throw new TurmaNaoEncontradaException(
                     "Turma não encontrada: " + idTurma
+            );
+        }
+
+        TipoTurma tipo = turma.getTipoTurma();
+
+        boolean exigeResponsavel =
+                tipo == TipoTurma.CATEQUESE
+                || tipo == TipoTurma.CRISMA_JOVEM;
+
+        if (exigeResponsavel
+                && catequisando.getResponsaveis().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Esta turma exige pelo menos um responsável cadastrado."
             );
         }
 
@@ -115,6 +129,16 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     public List<Catequisando> pesquisarCatequisandoPorNome(String nome) {
         return catequisandos.values().stream()
                 .filter(c -> c.getNome().toLowerCase().contains(nome.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Catequisando> pesquisarCatequisandosPorTurma(
+            String idTurma) {
+
+        return catequisandos.values().stream()
+                .filter(c -> c.getTurma() != null)
+                .filter(c -> c.getTurma().getIdTurma().equals(idTurma))
                 .collect(Collectors.toList());
     }
 

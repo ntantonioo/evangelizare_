@@ -8,16 +8,62 @@ public class Catequisando extends Usuario{
     private Turma turma;
     private List<Responsavel> responsaveis;
 
-    public Catequisando(String id, String nome, String telefone, int idade, String senha, Turma turma, Responsavel responsaveis) {
-        super(id, nome, telefone, idade, senha);
+    public Catequisando(
+            String id,
+            String nome,
+            String telefone,
+            int idade,
+            String senha,
+            Turma turma
+    ) {
+        super(
+                validarCampo(id, "O ID"),
+                validarCampo(nome, "O nome"),
+                validarCampo(telefone, "O telefone"),
+                validarIdade(idade),
+                validarCampo(senha, "a senha")
+        );
+
+        if (turma == null) {
+            throw new IllegalArgumentException(
+                    "A turma deve ser informada."
+            );
+        }
+
         this.turma = turma;
         this.responsaveis = new ArrayList<>();
+    }
+
+    private static String validarCampo(String valor, String campo) {
+        if (valor == null || valor.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    campo + " não pode ficar vazio."
+            );
+        }
+
+        return valor.trim();
+    }
+
+    private static int validarIdade(int idade) {
+        if (idade <= 0 ) {
+            throw new IllegalArgumentException(
+                    "A idade deve ser maior que zero."
+            );
+        }
+
+        return idade;
     }
 
     public Turma getTurma() {
         return turma;
     }
     public void setTurma(Turma turma) {
+        if (turma == null) {
+            throw new IllegalArgumentException(
+                    "A turma não pode ser nula."
+            );
+        }
+
         this.turma = turma;
     }
 
@@ -43,6 +89,7 @@ public class Catequisando extends Usuario{
                 ", telefone='" + getTelefone() + '\'' +
                 ", idade=" + getIdade() +
                 ", turma=" + turma +
+                ", quantidadeResponsaveis=" + responsaveis.size() +
                 '}';
     }
 }
