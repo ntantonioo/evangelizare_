@@ -4,8 +4,15 @@ public class Catequista extends Usuario {
 
     private String anoDeIngresso;
 
-    public Catequista(String id, String nome, int idade, String senha, String anoDeIngresso) {
-        super(id, nome, idade, senha);
+    public Catequista(
+            String id,
+            String nome,
+            String telefone,
+            int idade,
+            String senha,
+            String anoDeIngresso
+    ) {
+        super(id, nome, telefone, idade, senha);
         this.anoDeIngresso = anoDeIngresso;
     }
 
