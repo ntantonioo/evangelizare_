@@ -717,6 +717,8 @@ public class TelaPrincipal {
     private void editarCatequista(Scanner scanner) {
         System.out.println("\n========== EDITAR CATEQUISTA ==========");
 
+        scanner.nextLine();
+
         System.out.println("ID do catequista: ");
         String id = scanner.nextLine().trim();
 
@@ -801,7 +803,7 @@ public class TelaPrincipal {
             String senha = scanner.nextLine();
 
             System.out.println("Digite o ID da turma: ");
-            String idTurma = scanner.nextLine();
+            String idTurma = scanner.nextLine().trim();
 
             Turma turmaSelecionada = null;
 
@@ -814,7 +816,7 @@ public class TelaPrincipal {
 
             if (turmaSelecionada == null) {
                 System.out.println(
-                        "A turma  infomrada não pertence a você."
+                        "A turma informada não pertence a você."
                 );
                 return;
             }
@@ -896,8 +898,9 @@ public class TelaPrincipal {
         System.out.println("\n========== EDITAR CATEQUISANDO ==========");
 
         try {
-            // busca somente as turmas do catequista logado
-            List<Turma> turmasDisponiveis = sistema.pesquisarTurmaPorCatequista(catequista.getId());
+            // Busca somente as turmas do catequista logado.
+            List<Turma> turmasDisponiveis =
+                    sistema.pesquisarTurmaPorCatequista(catequista.getId());
 
             if (turmasDisponiveis.isEmpty()) {
                 System.out.println("Você não possui turmas cadastradas.");
@@ -909,11 +912,11 @@ public class TelaPrincipal {
             for (Turma turma : turmasDisponiveis) {
                 System.out.println(
                         "ID: " + turma.getIdTurma()
-                        + " | Tipo: " + turma.getTipoTurma()
+                                + " | Tipo: " + turma.getTipoTurma()
                 );
             }
 
-            System.out.println("\nDigite o ID da turma: ");
+            System.out.print("\nDigite o ID da turma: ");
             String idTurma = scanner.nextLine().trim();
 
             boolean turmaPermitida = turmasDisponiveis.stream()
@@ -942,10 +945,12 @@ public class TelaPrincipal {
                 );
             }
 
-            System.out.println("\nDigite o ID do catequisando que deseja editar: ");
+            System.out.print(
+                    "\nDigite o ID do catequisando que deseja editar: "
+            );
             String idCatequisando = scanner.nextLine().trim();
 
-            // localiza o catequisando somente entre os da turma autorizada
+            // Localiza o catequisando somente na turma autorizada.
             Catequisando selecionado = null;
 
             for (Catequisando c : catequisandos) {
@@ -964,19 +969,25 @@ public class TelaPrincipal {
 
             System.out.println("\nCatequisando: " + selecionado.getNome());
 
-            System.out.println("Novo telefone (atual: " + selecionado.getTelefone() + "): "
+            System.out.print(
+                    "Novo telefone (atual: "
+                            + selecionado.getTelefone() + "): "
             );
             String telefone = scanner.nextLine().trim();
 
-            System.out.println(
-                    "Nova idade (atual: " + selecionado.getIdade() + "): "
+            System.out.print(
+                    "Nova idade (atual: "
+                            + selecionado.getIdade() + "): "
             );
+
             int idade;
 
             try {
                 idade = Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.println("Idade inválida. Informe um número inteiro.");
+                System.out.println(
+                        "Idade inválida. Informe um número inteiro."
+                );
                 return;
             }
 
@@ -991,35 +1002,61 @@ public class TelaPrincipal {
 
             boolean exigeResponsavel =
                     tipo == TipoTurma.CATEQUESE
-                    || tipo == TipoTurma.CRISMA_JOVEM;
+                            || tipo == TipoTurma.CRISMA_JOVEM;
 
             boolean adicionarResponsavel = true;
 
-            do {
-                System.out.println("\n--- DADOS DO RESPONSÁVEL ---");
-
-                System.out.println("Nome: ");
-                String nomeResponsavel = scanner.nextLine();
-
-                System.out.println("Telefone: ");
-                String telefoneResponsavel = scanner.nextLine();
-
-                System.out.println("Parentesco: ");
-                String parentesco = scanner.nextLine();
-
-                responsaveis.add(
-                        new Responsavel(
-                                nomeResponsavel,
-                                telefoneResponsavel,
-                                parentesco
-                        )
+            // Nas turmas que não exigem responsáveis, o cadastro é opcional.
+            if (!exigeResponsavel) {
+                System.out.print(
+                        "\nDeseja cadastrar responsáveis? (S/N): "
                 );
 
-                System.out.println("Deseja adicionar outro responsável? (S/N): ");
-                adicionarResponsavel =
-                        scanner.nextLine().trim().equalsIgnoreCase("S");
+                String resposta = scanner.nextLine().trim();
 
-            } while (adicionarResponsavel);
+                while (!resposta.equalsIgnoreCase("S")
+                        && !resposta.equalsIgnoreCase("N")) {
+                    System.out.print("Resposta inválida. Digite S ou N: ");
+                    resposta = scanner.nextLine().trim();
+                }
+
+                adicionarResponsavel = resposta.equalsIgnoreCase("S");
+            }
+
+            while (adicionarResponsavel) {
+                System.out.println("\n--- DADOS DO RESPONSÁVEL ---");
+
+                System.out.print("Nome: ");
+                String nomeResponsavel = scanner.nextLine().trim();
+
+                System.out.print("Telefone: ");
+                String telefoneResponsavel = scanner.nextLine().trim();
+
+                System.out.print("Parentesco: ");
+                String parentesco = scanner.nextLine().trim();
+
+                Responsavel responsavel = new Responsavel(
+                        nomeResponsavel,
+                        telefoneResponsavel,
+                        parentesco
+                );
+
+                responsaveis.add(responsavel);
+
+                System.out.print(
+                        "Deseja adicionar outro responsável? (S/N): "
+                );
+
+                String resposta = scanner.nextLine().trim();
+
+                while (!resposta.equalsIgnoreCase("S")
+                        && !resposta.equalsIgnoreCase("N")) {
+                    System.out.print("Resposta inválida. Digite S ou N: ");
+                    resposta = scanner.nextLine().trim();
+                }
+
+                adicionarResponsavel = resposta.equalsIgnoreCase("S");
+            }
 
             if (responsaveis.isEmpty() && exigeResponsavel) {
                 System.out.println(
@@ -1035,16 +1072,16 @@ public class TelaPrincipal {
                     responsaveis
             );
 
-            System.out.println("\nDados atualizados com sucesso");
+            System.out.println("\nDados atualizados com sucesso!");
 
         } catch (CatequistaNaoEncontradoException
-                | CatequisandoNaoEncontradoException e) {
+                 | CatequisandoNaoEncontradoException e) {
 
             System.out.println("Erro: " + e.getMessage());
 
         } catch (IllegalArgumentException e) {
-            System.out.println("Não foi possível atualizar: " + e.getMessage()
-
+            System.out.println(
+                    "Não foi possível atualizar: " + e.getMessage()
             );
         }
     }
@@ -1148,47 +1185,80 @@ public class TelaPrincipal {
         int etapaTurma = scanner.nextInt();
         scanner.nextLine();
 
-        TipoTurma tipoTurma = null;
+        TipoTurma tipoTurma;
 
         switch (etapaTurma) {
             case 1:
-                System.out.println("Etapa selecionada: Catequese Infantil.");
                 tipoTurma = TipoTurma.CATEQUESE;
                 break;
-
             case 2:
-                System.out.println("Etapa selecionada: Crisma Jovem.");
                 tipoTurma = TipoTurma.CRISMA_JOVEM;
                 break;
-
             case 3:
-                System.out.println("Etapa selecionada: Crisma Adulto.");
                 tipoTurma = TipoTurma.CRISMA_ADULTO;
                 break;
-
             case 0:
                 System.out.println("Retornando ao menu...");
-                break;
-
+                return;
             default:
                 System.out.println("Opção inválida.");
                 return;
         }
 
-        System.out.println("Digite o ID da turma: ");
-        String idTurma = scanner.nextLine();
+        System.out.print("Digite o ID da turma: ");
+        String idTurma = scanner.nextLine().trim();
 
-        System.out.println("Digite o ID do catequista responsável: ");
-        String catequistaId = scanner.nextLine();
+        System.out.print("Digite o ID do primeiro catequista: ");
+        String primeiroCatequistaId = scanner.nextLine().trim();
 
         try {
-            Catequista catequista = sistema.pesquisarCatequistaPorId(catequistaId);
+            Catequista primeiroCatequista =
+                    sistema.pesquisarCatequistaPorId(primeiroCatequistaId);
 
-            Turma turma = new Turma(idTurma, tipoTurma, catequista);
+            Turma turma = new Turma(
+                    idTurma,
+                    tipoTurma,
+                    primeiroCatequista
+            );
+
+            while (true) {
+                System.out.print(
+                        "Cadastrar mais um catequista na turma (S/N)? "
+                );
+
+                String resposta = scanner.nextLine().trim();
+
+                if (resposta.equalsIgnoreCase("N")) {
+                    break;
+                }
+
+                if (resposta.equalsIgnoreCase("S")) {
+                    System.out.print("Digite o ID do segundo catequista: ");
+                    String segundoCatequistaId = scanner.nextLine().trim();
+
+                    Catequista segundoCatequista =
+                            sistema.pesquisarCatequistaPorId(segundoCatequistaId);
+
+                    turma.adicionarCatequista(segundoCatequista);
+                    break;
+                }
+
+                System.out.println("Resposta inválida. Digite S ou N.");
+            }
 
             sistema.cadastrarTurma(turma);
 
             System.out.println("Turma cadastrada com sucesso!");
+            System.out.println("ID da turma: " + turma.getIdTurma());
+            System.out.println("Etapa: " + turma.getTipoTurma());
+            System.out.println("Catequistas responsáveis:");
+
+            for (Catequista catequista : turma.getCatequistas()) {
+                System.out.println(
+                        "- " + catequista.getNome()
+                                + " (ID: " + catequista.getId() + ")"
+                );
+            }
 
         } catch (CatequistaNaoEncontradoException e) {
             System.out.println(e.getMessage());

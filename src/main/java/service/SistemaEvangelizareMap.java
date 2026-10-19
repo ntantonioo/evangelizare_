@@ -33,22 +33,27 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public void removerCatequista(String id) throws CatequistaNaoEncontradoException {
+    public void removerCatequista(String id)
+            throws CatequistaNaoEncontradoException {
 
         if (!catequistas.containsKey(id)) {
-            throw new CatequistaNaoEncontradoException("Catequista não encontrado: " + id);
+            throw new CatequistaNaoEncontradoException(
+                    "Catequista não encontrado: " + id
+            );
         }
 
         boolean possuiTurmas = turmas.values().stream()
                 .anyMatch(turma ->
-                        turma.getCatequista() != null
-                        && turma.getCatequista().getId().equals(id)
+                        turma.getCatequistas().stream()
+                                .anyMatch(catequista ->
+                                        catequista.getId().equals(id)
+                                )
                 );
 
         if (possuiTurmas) {
             throw new IllegalArgumentException(
                     "Não é possível remover este catequista, "
-                    + "pois ele ainda possui turmas associadas."
+                            + "pois ele ainda possui turmas associadas."
             );
         }
 
@@ -209,36 +214,42 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         if (turma == null) {
             throw new IllegalArgumentException(
-                    "A turma não pode ser nula"
+                    "A turma não pode ser nula."
             );
         }
 
         if (turma.getIdTurma() == null
-            || turma.getIdTurma().isBlank()) {
-        throw new IllegalArgumentException(
-                "O ID da turma é obrigatório."
-        );
-    }
-
-        if (turma.getCatequista() == null) {
+                || turma.getIdTurma().isBlank()) {
             throw new IllegalArgumentException(
-                    "A turma precisa ter um catequista responsável."
+                    "O ID da turma é obrigatório."
+            );
+        }
+
+        if (turma.getCatequistas().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "A turma precisa ter pelo menos um catequista."
+            );
+        }
+
+        if (turma.getCatequistas().size() > 2) {
+            throw new IllegalArgumentException(
+                    "A turma pode ter no máximo dois catequistas."
             );
         }
 
         if (turmas.containsKey(turma.getIdTurma())) {
             throw new IllegalArgumentException(
-                    "Já existe um turma com esse ID."
+                    "Já existe uma turma com esse ID."
             );
         }
 
-        Catequista catequistaCadastrado = pesquisarCatequistaPorId(turma.getCatequista().getId());
-
-        // garante que a turma utilize o objeto cadastrado no sistema
-        turma.setCatequista(catequistaCadastrado);
+        for (Catequista catequista : turma.getCatequistas()) {
+            pesquisarCatequistaPorId(catequista.getId());
+        }
 
         turmas.put(turma.getIdTurma(), turma);
     }
+
 
     @Override
     public void removerTurma(String idTurma) throws TurmaNaoEncontradaException {
@@ -259,7 +270,6 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         turmas.remove(idTurma);
     }
-
 
     @Override
     public List<Turma> pesquisarTurmaPorId(String idTurma)
@@ -299,24 +309,19 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public List<Turma> pesquisarTurmaPorCatequista(String catequistaId)
-        throws CatequistaNaoEncontradoException,
-            TurmaNaoEncontradaException {
+    public List<Turma> pesquisarTurmaPorCatequista(String idCatequista)
+            throws CatequistaNaoEncontradoException {
 
-        Catequista catequista = pesquisarCatequistaPorId(catequistaId);
+        pesquisarCatequistaPorId(idCatequista);
 
-        List<Turma> resultado = turmas.values().stream()
-                .filter(turma -> turma.getCatequista() != null
-                        && turma.getCatequista().getId().equals(catequista.getId()))
-                .collect(Collectors.toList());
-
-        if (resultado.isEmpty()) {
-            throw new TurmaNaoEncontradaException(
-                    "Nenhuma turma encontrada para o catequista: " + catequistaId
-            );
-        }
-
-        return resultado;
+        return turmas.values().stream()
+                .filter(turma ->
+                        turma.getCatequistas().stream()
+                                .anyMatch(catequista ->
+                                        catequista.getId().equals(idCatequista)
+                                )
+                )
+                .toList();
     }
 
     @Override
@@ -473,9 +478,12 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                 );
             }
 
-            if (turma.getCatequista() == null
-                    || !turma.getCatequista().getId()
-                    .equals(usuarioLogado.getId())) {
+            boolean catequistaResponsavel = turma.getCatequistas().stream()
+                    .anyMatch(catequista ->
+                            catequista.getId().equals(usuarioLogado.getId())
+                    );
+
+            if (!catequistaResponsavel) {
                 throw new IllegalArgumentException(
                         "O catequista só pode publicar notícias para sua turma."
                 );
