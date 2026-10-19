@@ -154,7 +154,8 @@ public class TelaPrincipal {
             System.out.println("1 - Cadastrar Catequisando");
             System.out.println("2 - Consultar Catequisandos");
             System.out.println("3 - Editar Catequisando");
-            System.out.println("4 - Notícias");
+            System.out.println("4 - Remover Catequisando");
+            System.out.println("5 - Notícias");
             System.out.println("0 - Encerrar sessão");
 
             System.out.println("Escolha uma opção: ");
@@ -176,8 +177,11 @@ public class TelaPrincipal {
                     break;
 
                 case 4:
-                    menuNoticias(scanner, catequista);
+                    removerCatequisando(scanner, catequista);
                     break;
+
+                case 5:
+                    menuNoticias(scanner, catequista);
 
                 case 0:
                     System.out.println("Sessão encerrada");
@@ -989,6 +993,92 @@ public class TelaPrincipal {
             System.out.println("Não foi possível atualizar: " + e.getMessage()
 
             );
+        }
+    }
+
+    // REMOVER CATEQUISANDO
+
+    private void removerCatequisando(Scanner scanner, Catequista catequista) {
+        try {
+            // busca as turmas do catequista
+            List<Turma> turmasDisponiveis =
+                    sistema.pesquisarTurmaPorCatequista(catequista.getId());
+
+            if (turmasDisponiveis.isEmpty()) {
+                System.out.println("Você não possui turmas cadastradas.");
+                return;
+            }
+
+            System.out.println("\n========== REMOVER CATEQUISANDO ==========");
+            System.out.println("Suas turmas");
+
+            for (Turma turma : turmasDisponiveis) {
+                System.out.println(
+                        "ID: " + turma.getIdTurma()
+                );
+            }
+
+            System.out.println("\nInforme o ID da turma: ");
+            String idTurma = scanner.nextLine().trim();
+
+            boolean turmaPermitida = turmasDisponiveis.stream()
+                    .anyMatch(t -> t.getIdTurma().equals(idTurma));
+
+            if (!turmaPermitida) {
+                System.out.println("Você não tem acesso a essa turma.");
+                return;
+            }
+
+            // listar catequisandos da turma
+            List<Catequisando> catequisandos =
+                    sistema.pesquisarCatequisandosPorTurma(idTurma);
+
+            if (catequisandos.isEmpty()) {
+                System.out.println("Não há catequisandos nesta turma.");
+                return;
+            }
+
+            System.out.println("\nCatequisandos disponíveis:");
+
+            for (Catequisando c : catequisandos) {
+                System.out.println(
+                        "ID: " + c.getId()
+                        + " | Nome: " + c.getNome()
+                );
+            }
+
+            System.out.println("\nInforme o ID do catequisando: ");
+            String idCatequisando = scanner.nextLine().trim();
+
+            boolean catequisandoEncontrado = catequisandos.stream()
+                    .anyMatch(c -> c.getId().equals(idCatequisando));
+
+            if (!catequisandoEncontrado) {
+                System.out.println(
+                        "Catequisando não encontrado nesta turma."
+                );
+                return;
+            }
+
+            // confirmação de remoção
+            System.out.println(
+                    "Deseja realmente remover este catequisando? (S/N): "
+            );
+            String confirmacao = scanner.nextLine().trim();
+
+            if (!confirmacao.equalsIgnoreCase("S")) {
+                System.out.println("Remoção cancelada");
+                return;
+            }
+
+            sistema.removerCatequisando(idCatequisando);
+
+            System.out.println("Catequisando removido com sucesso!");
+
+        } catch (CatequisandoNaoEncontradoException e) {
+            System.out.println(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
         }
     }
 
