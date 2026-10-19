@@ -22,9 +22,9 @@ O sistema busca organizar as informações e definir permissões de acordo com o
 - [x] Definição dos perfis de usuário e das regras de acesso.
 - [x] Estrutura para gerenciamento de turmas e usuários.
 - [x] Estrutura para autenticação de usuários.
-- [ ] Concluir e validar o fluxo completo de autenticação.
-- [ ] Finalizar e testar os fluxos de cadastro.
-- [ ] Implementar o gerenciamento completo de notícias.
+- [x] Concluir e validar o fluxo completo de autenticação.
+- [x] Finalizar e testar os fluxos de cadastro.
+- [x] Implementar o gerenciamento completo de notícias.
 - [ ] Desenvolver uma interface gráfica.
 
 > O projeto está em desenvolvimento. A lista de funcionalidades será atualizada conforme novas etapas forem concluídas.
