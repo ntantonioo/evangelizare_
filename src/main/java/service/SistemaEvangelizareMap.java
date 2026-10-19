@@ -126,6 +126,39 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
+    public void atualizarCatequisando(String id, String telefone, int idade, List<Responsavel> responsaveis)
+        throws CatequisandoNaoEncontradoException {
+
+        // verifica se o catequisando existe
+        Catequisando catequisando = pesquisarCatequisandoPorId(id);
+
+        // verifica se a lista de responsaveis foi informada
+        if (responsaveis == null) {
+            throw new IllegalArgumentException(
+                    "A lista de responsáveis não pode ser nula."
+            );
+        }
+
+        // verifica as regras da turma
+        TipoTurma tipo = catequisando.getTurma().getTipoTurma();
+
+        boolean exigeResponsavel =
+                tipo == TipoTurma.CATEQUESE
+                || tipo == TipoTurma.CRISMA_JOVEM;
+
+        if (exigeResponsavel && responsaveis.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Esta turma exige pelo menos um responsável cadastrado."
+            );
+        }
+
+        // Atualiza os dados após validar as regras
+        catequisando.atualizarTelefone(telefone);
+        catequisando.atualizarIdade(idade);
+        catequisando.atualizarResponsaveis(responsaveis);
+    }
+
+    @Override
     public List<Catequisando> pesquisarCatequisandoPorNome(String nome) {
         return catequisandos.values().stream()
                 .filter(c -> c.getNome().toLowerCase().contains(nome.toLowerCase()))

@@ -67,6 +67,48 @@ public class Catequisando extends Usuario{
         this.turma = turma;
     }
 
+    public void atualizarTelefone(String telefone) {
+        if (telefone == null || telefone.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "O telefone não pode ficar vazio"
+            );
+        }
+
+        setTelefone(telefone.trim());
+    }
+
+    public void atualizarIdade(int idade) {
+        if (idade <= 0) {
+            throw new IllegalArgumentException(
+                    "A idade deve ser maior que zero."
+            );
+        }
+
+        setIdade(idade);
+    }
+
+    public void atualizarResponsaveis(List<Responsavel> responsaveis) {
+        if (responsaveis == null) {
+            throw new IllegalArgumentException(
+                    "A lista de responsáveis não pode ser nula."
+            );
+        }
+
+        List<Responsavel> novaLista = new ArrayList<>();
+
+        for (Responsavel responsavel : responsaveis) {
+            if (responsavel == null) {
+                throw new IllegalArgumentException(
+                        "A lista não pode conter responsáveis nulos."
+                );
+            }
+
+            novaLista.add(responsavel);
+        }
+
+        this.responsaveis = novaLista;
+    }
+
     public List<Responsavel> getResponsaveis() {
         return new ArrayList<>(responsaveis);
     }

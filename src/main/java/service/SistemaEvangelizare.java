@@ -14,6 +14,7 @@ import model.Catequisando;
 import model.Catequista;
 import model.Turma;
 import model.Usuario;
+import model.Responsavel;
 
 public interface SistemaEvangelizare {
 
@@ -41,6 +42,9 @@ public interface SistemaEvangelizare {
 
     void cadastrarCatequisando(Catequisando catequisando)
             throws TurmaNaoEncontradaException;
+
+    void atualizarCatequisando(String id, String telefone, int idade, List<Responsavel> responsaveis)
+        throws CatequisandoNaoEncontradoException;
 
     void removerCatequisando(String id)
             throws CatequisandoNaoEncontradoException;
