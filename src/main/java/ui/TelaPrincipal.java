@@ -116,7 +116,8 @@ public class TelaPrincipal {
             System.out.println("\n========== MENU DO ADMINISTRADOR ==========");
             System.out.println("1 - Cadastrar Usuário");
             System.out.println("2 - Cadastrar Turma");
-            System.out.println("3 - Notícias");
+            System.out.println("3 - Editar Catequista");
+            System.out.println("4 - Notícias");
             System.out.println("0 - Encerrar sessão");
 
             opcao = scanner.nextInt();
@@ -131,6 +132,10 @@ public class TelaPrincipal {
                     break;
 
                 case 3:
+                    editarCatequista(scanner);
+                    break;
+
+                case 4:
                     menuNoticias(scanner, usuarioLogado);
                     break;
 
@@ -704,6 +709,54 @@ public class TelaPrincipal {
 
         } catch (IllegalArgumentException e) {
             System.out.println("\nNao foi possível cadastrar: " + e.getMessage());
+        }
+    }
+
+    // EDITAR CATEQUISTA
+
+    private void editarCatequista(Scanner scanner) {
+        System.out.println("\n========== EDITAR CATEQUISTA ==========");
+
+        System.out.println("ID do catequista: ");
+        String id = scanner.nextLine().trim();
+
+        try {
+            Catequista catequista = sistema.pesquisarCatequistaPorId(id);
+
+            System.out.println("\nCatequista encontrado: " + catequista.getNome());
+            System.out.println("Telefone atual: " + catequista.getTelefone());
+            System.out.println("Idade atual: " + catequista.getIdade());
+            System.out.println("Ano de ingresso atual: " + catequista.getAnoDeIngresso());
+
+            System.out.println("\nNovo telefone");
+            String telefone = scanner.nextLine().trim();
+
+            System.out.println("Nova idade: ");
+            int idade;
+
+            try {
+                idade = Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Idade inválida. A edição foi cancelada.");
+                return;
+            }
+
+            System.out.println("Novo ano de ingresso: ");
+            String anoDeIngresso = scanner.nextLine().trim();
+
+            sistema.atualizarCatequista(
+                    id,
+                    telefone,
+                    idade,
+                    anoDeIngresso
+            );
+
+            System.out.println("\nCatequista atualizado com sucesso!");
+
+        } catch (CatequistaNaoEncontradoException e) {
+            System.out.println(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Não foi possível atualizar: " + e.getMessage());
         }
     }
 

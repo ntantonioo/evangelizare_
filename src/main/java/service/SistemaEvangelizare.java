@@ -38,6 +38,9 @@ public interface SistemaEvangelizare {
 
     List<Catequista> pesquisarCatequistaPorNome(String nome);
 
+    void atualizarCatequista(String id, String telefone, int idade, String anoDeIngresso)
+        throws CatequistaNaoEncontradoException;
+
     // Catequisando
 
     void cadastrarCatequisando(Catequisando catequisando)

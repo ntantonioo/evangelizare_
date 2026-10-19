@@ -57,6 +57,17 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
+    public void atualizarCatequista(String id, String telefone, int idade, String anoDeIngresso)
+        throws CatequistaNaoEncontradoException {
+
+        Catequista catequista = pesquisarCatequistaPorId(id);
+
+        catequista.atualizarTelefone(telefone);
+        catequista.atualizarIdade(idade);
+        catequista.atualizarAnoDeIngresso(anoDeIngresso);
+    }
+
+    @Override
     public Catequista pesquisarCatequistaPorId(String id) throws CatequistaNaoEncontradoException {
         Catequista catequista = catequistas.get(id);
         if (catequista == null) {
