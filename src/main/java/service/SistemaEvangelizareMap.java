@@ -34,9 +34,24 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public void removerCatequista(String id) throws CatequistaNaoEncontradoException {
+
         if (!catequistas.containsKey(id)) {
             throw new CatequistaNaoEncontradoException("Catequista não encontrado: " + id);
         }
+
+        boolean possuiTurmas = turmas.values().stream()
+                .anyMatch(turma ->
+                        turma.getCatequista() != null
+                        && turma.getCatequista().getId().equals(id)
+                );
+
+        if (possuiTurmas) {
+            throw new IllegalArgumentException(
+                    "Não é possível remover este catequista, "
+                    + "pois ele ainda possui turmas associadas."
+            );
+        }
+
         catequistas.remove(id);
         usuarios.remove(id);
     }
@@ -45,7 +60,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     public Catequista pesquisarCatequistaPorId(String id) throws CatequistaNaoEncontradoException {
         Catequista catequista = catequistas.get(id);
         if (catequista == null) {
-            throw new CatequistaNaoEncontradoException("Vendedor não encontrado: " + id);
+            throw new CatequistaNaoEncontradoException("Catequista não encontrado: " + id);
         }
         return catequista;
     }
