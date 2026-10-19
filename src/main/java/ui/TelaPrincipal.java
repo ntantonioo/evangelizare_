@@ -273,10 +273,24 @@ public class TelaPrincipal {
                 System.out.println("Nome: " + c.getNome());
                 System.out.println("Telefone: " + c.getTelefone());
                 System.out.println("Idade: " + c.getIdade());
-                System.out.println(
-                        "Quantidade de responsáveis: "
-                                + c.getResponsaveis().size()
-                );
+                System.out.println("\nResponsáveis:");
+
+                if (c.getResponsaveis().isEmpty()) {
+                    System.out.println("Nenhum responsável cadastrado.");
+                } else {
+                    for (Responsavel responsavel : c.getResponsaveis()) {
+                        System.out.println("------------------------------");
+                        System.out.println(
+                                "Nome: " + responsavel.getNomeResponsavel()
+                        );
+                        System.out.println(
+                                "Telefone: " + responsavel.getTelefoneResponsavel()
+                        );
+                        System.out.println(
+                                "Parentesco: " + responsavel.getParentesco()
+                        );
+                    }
+                }
             }
 
         } catch (CatequistaNaoEncontradoException e) {
