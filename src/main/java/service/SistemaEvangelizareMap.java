@@ -261,11 +261,19 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
-        for (Catequisando catequisando : catequisandos.values()) {
-            if (catequisando.getTurma() != null
-                    && catequisando.getTurma().getIdTurma().equals(idTurma)) {
-                catequisando.setTurma(null);
-            }
+        boolean possuiCatequisandos = catequisandos.values().stream()
+                .anyMatch(catequisando ->
+                        catequisando.getTurma() !=null
+                        && catequisando.getTurma()
+                                .getIdTurma().equals(idTurma)
+                );
+
+        if (possuiCatequisandos) {
+            throw new IllegalArgumentException(
+                    "Não é possível remover esta turma, pois "
+                    + "existem catequisandos vinculados a ela. "
+                    + "Transfira-os para outra turma antes de remôve-la."
+            );
         }
 
         turmas.remove(idTurma);
