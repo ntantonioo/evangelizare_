@@ -95,6 +95,46 @@ public class Turma {
         catequistas.add(catequista);
     }
 
+    public void atualizarCatequistas(List<Catequista> novosCatequistas) {
+        if (novosCatequistas == null || novosCatequistas.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "A turma precisa ter pelo menos um catequista"
+            );
+        }
+
+        if (novosCatequistas.size() > 2) {
+            throw new IllegalArgumentException(
+                    "A turma pode ter no máximo dois catequistas."
+            );
+        }
+
+        List<Catequista> listaValida = new ArrayList<>();
+
+        for (Catequista catequista : novosCatequistas) {
+            if (catequista == null || catequista.getId() == null) {
+                throw new IllegalArgumentException(
+                        "O catequista e seu ID são obrigatório."
+                );
+            }
+
+            boolean duplicado = listaValida.stream()
+                    .anyMatch(existente ->
+                            existente.getId().equals(catequista.getId())
+                    );
+
+            if (duplicado) {
+                throw new IllegalArgumentException(
+                        "Este catequista já está associado à turma."
+                );
+            }
+
+            listaValida.add(catequista);
+        }
+
+        this.catequistas.clear();
+        this.catequistas.addAll(listaValida);
+    }
+
     @Override
     public String toString() {
         List<String> nomes = new ArrayList<>();

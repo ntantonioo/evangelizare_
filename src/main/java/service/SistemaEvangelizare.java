@@ -67,6 +67,10 @@ public interface SistemaEvangelizare {
     void removerTurma(String idTurma)
             throws TurmaNaoEncontradaException;
 
+    void editarTurma(Turma turma)
+        throws TurmaNaoEncontradaException,
+            CatequistaNaoEncontradoException;
+
     List<Turma> pesquisarTurmaPorId(String idTurma)
             throws TurmaNaoEncontradaException;
 

@@ -280,6 +280,85 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
+    public void editarTurma(Turma turma)
+            throws TurmaNaoEncontradaException,
+            CatequistaNaoEncontradoException {
+
+        if (turma == null) {
+            throw new IllegalArgumentException(
+                    "A turma não pode ser nula."
+            );
+        }
+
+        String idTurma = turma.getIdTurma();
+
+        if (idTurma == null || idTurma.isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ID da turma é obrigatório."
+            );
+        }
+
+        Turma turmaExistente = turmas.get(idTurma);
+
+        if (turmaExistente == null) {
+            throw new TurmaNaoEncontradaException(
+                    "Turma não encontrada: " + idTurma
+            );
+        }
+
+        if (turma.getTipoTurma() == null) {
+            throw new IllegalArgumentException(
+                    "O tipo da turma é obrigatório."
+            );
+        }
+
+        List<Catequista> novosCatequistas = turma.getCatequistas();
+
+        if (novosCatequistas.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "A turma precisa ter pelo menos um catequista."
+            );
+        }
+
+        if (novosCatequistas.size() > 2) {
+            throw new IllegalArgumentException(
+                    "A turma pode ter no máximo dois catequistas."
+            );
+        }
+
+        for (Catequista catequista : novosCatequistas) {
+            if (catequista == null || catequista.getId() == null) {
+                throw new IllegalArgumentException(
+                        "O catequista e seu ID são obrigatórios."
+                );
+            }
+
+            pesquisarCatequistaPorId(catequista.getId());
+        }
+
+        // valida a lista antes de modificar a turma existente.
+        List<Catequista> listaValidada = new ArrayList<>();
+
+        for (Catequista catequista : novosCatequistas) {
+            boolean duplicado = listaValidada.stream()
+                    .anyMatch(existente ->
+                            existente.getId().equals(catequista.getId())
+                    );
+
+            if (duplicado) {
+                throw new IllegalArgumentException(
+                        "Este catequista já está associado à turma."
+                );
+            }
+
+            listaValidada.add(catequista);
+        }
+
+        turmaExistente.atualizarCatequistas(listaValidada);
+        turmaExistente.setTipoTurma(turma.getTipoTurma());
+    }
+
+    @Override
     public List<Turma> pesquisarTurmaPorId(String idTurma)
             throws TurmaNaoEncontradaException {
 
