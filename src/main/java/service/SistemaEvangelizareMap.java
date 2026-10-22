@@ -354,6 +354,27 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             listaValidada.add(catequista);
         }
 
+        // verifica se a mudança de tipo respeita as regras dos responsáveis.
+        if (turma.getTipoTurma() == TipoTurma.CATEQUESE
+                || turma.getTipoTurma() == TipoTurma.CRISMA_JOVEM) {
+
+            for (Catequisando catequisando : catequisandos.values()) {
+
+                if (catequisando.getTurma() != null
+                        && catequisando.getTurma().getIdTurma().equals(idTurma)
+                        && (catequisando.getResponsaveis() == null
+                        || catequisando.getResponsaveis().isEmpty())) {
+
+                    throw new IllegalArgumentException(
+                            "Não é possível alterar o tipo da turma. "
+                                    + "O catequisando "
+                                    + catequisando.getNome()
+                                    + " não possui responsável cadastrado."
+                    );
+                }
+            }
+        }
+
         turmaExistente.atualizarCatequistas(listaValidada);
         turmaExistente.setTipoTurma(turma.getTipoTurma());
     }
