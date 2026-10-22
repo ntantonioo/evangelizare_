@@ -118,7 +118,9 @@ public class TelaPrincipal {
             System.out.println("2 - Cadastrar Turma");
             System.out.println("3 - Editar Catequista");
             System.out.println("4 - Notícias");
+            System.out.println("5 - Editar Turma");
             System.out.println("0 - Encerrar sessão");
+            System.out.print("Escolha uma opção: ");
 
             opcao = scanner.nextInt();
 
@@ -137,6 +139,10 @@ public class TelaPrincipal {
 
                 case 4:
                     menuNoticias(scanner, usuarioLogado);
+                    break;
+
+                case 5:
+                    editarTurma(scanner);
                     break;
 
                 case 0:
@@ -1261,6 +1267,111 @@ public class TelaPrincipal {
             }
 
         } catch (CatequistaNaoEncontradoException e) {
+            System.out.println(e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // EDITAR TURMA
+    private void editarTurma(Scanner scanner) {
+        System.out.println("\n========== EDITAR TURMA ==========");
+
+        System.out.println("Digite o ID da turma que deseja editar: ");
+        String idTurma = scanner.nextLine().trim();
+
+        System.out.println("\nSelecione o novo tipo da turma:");
+        System.out.println("1 - Catequese Infantil");
+        System.out.println("2 - Crisma Jovem");
+        System.out.println("3 - Crisma Adulto");
+        System.out.println("0 - Cancelar");
+        System.out.print("Escolha uma opção: ");
+
+        int opcaoTipo;
+
+        try {
+            opcaoTipo = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Opção inválida.");
+            return;
+        }
+
+        TipoTurma tipoTurma;
+
+        switch (opcaoTipo) {
+            case 1:
+                tipoTurma = TipoTurma.CATEQUESE;
+                break;
+            case 2:
+                tipoTurma = TipoTurma.CRISMA_JOVEM;
+                break;
+            case 3:
+                tipoTurma = TipoTurma.CRISMA_ADULTO;
+                break;
+            case 0:
+                System.out.println("Edição cancelada.");
+                return;
+            default:
+                System.out.println("Opção inválida.");
+                return;
+
+        }
+
+        try {
+            System.out.println("Digite o ID do primeiro catequista: ");
+            String idPrimeiro = scanner.nextLine().trim();
+
+            Catequista primeiroCatequista =
+                    sistema.pesquisarCatequistaPorId(idPrimeiro);
+
+            Turma turmaAtualizada = new Turma(
+                    idTurma,
+                    tipoTurma,
+                    primeiroCatequista
+            );
+
+            while (true) {
+                System.out.println(
+                        "Deseja cadastrar um segundo catequista? (S/N ):"
+                );
+
+                String resposta = scanner.nextLine().trim();
+
+                if (resposta.equalsIgnoreCase("N")) {
+                    break;
+                }
+
+                if (resposta.equalsIgnoreCase("S")) {
+                    System.out.print("Digite o ID do segundo catequista: ");
+                    String idSegundo = scanner.nextLine().trim();
+
+                    Catequista segundoCatequista =
+                            sistema.pesquisarCatequistaPorId(idSegundo);
+
+                    turmaAtualizada.adicionarCatequista(segundoCatequista);
+                    break;
+                }
+
+                System.out.println("Resposta inválida. Digite S ou N.");
+            }
+
+            sistema.editarTurma(turmaAtualizada);
+
+            System.out.println("\nTurma editada com sucesso!");
+            System.out.println("ID: " + idTurma);
+            System.out.println("Tipo: " + tipoTurma);
+            System.out.println("Catequistas responsáveis:");
+
+            for (Catequista catequista : turmaAtualizada.getCatequistas()) {
+                System.out.println(
+                        "- " + catequista.getNome()
+                        + " (ID: " + catequista.getId() + ")"
+                );
+            }
+
+        } catch (TurmaNaoEncontradaException
+                | CatequistaNaoEncontradoException e) {
             System.out.println(e.getMessage());
 
         } catch (IllegalArgumentException e) {
