@@ -25,6 +25,8 @@ O sistema busca organizar as informações e definir permissões de acordo com o
 - [x] Concluir e validar o fluxo completo de autenticação.
 - [x] Finalizar e testar os fluxos de cadastro.
 - [x] Implementar o gerenciamento completo de notícias.
+- [x] Cadastro e gerenciamento de catequisandos pelos catequistas responsáveis
+- [x] Controle de permissões para publicação, consulta e remoção de notícias
 - [ ] Desenvolver uma interface gráfica.
 
 > O projeto está em desenvolvimento. A lista de funcionalidades será atualizada conforme novas etapas forem concluídas.
