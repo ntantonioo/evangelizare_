@@ -1281,6 +1281,35 @@ public class TelaPrincipal {
         System.out.println("Digite o ID da turma que deseja editar: ");
         String idTurma = scanner.nextLine().trim();
 
+        List<Turma> turmasEncontradas;
+
+        try {
+            turmasEncontradas = sistema.pesquisarTurmaPorId(idTurma);
+
+        } catch (TurmaNaoEncontradaException e) {
+            System.out.println(e.getMessage());
+            return;
+        }
+
+        if (turmasEncontradas.isEmpty()) {
+            System.out.println("Nenhuma turma encontrada.");
+            return;
+        }
+
+        Turma turmaAtual = turmasEncontradas.get(0);
+
+        System.out.println("\n========== DADOS ATUAIS DA TURMA ==========");
+        System.out.println("ID: " + turmaAtual.getIdTurma());
+        System.out.println("Tipo: " + turmaAtual.getTipoTurma());
+        System.out.println("Catequistas responsáveis:");
+
+        for (Catequista catequista : turmaAtual.getCatequistas()) {
+            System.out.println(
+                    "- " + catequista.getNome()
+                    + " (ID: " + catequista.getId() + ")"
+            );
+        }
+
         System.out.println("\nSelecione o novo tipo da turma:");
         System.out.println("1 - Catequese Infantil");
         System.out.println("2 - Crisma Jovem");
@@ -1319,17 +1348,48 @@ public class TelaPrincipal {
         }
 
         try {
-            System.out.println("Digite o ID do primeiro catequista: ");
-            String idPrimeiro = scanner.nextLine().trim();
+            System.out.println("\nDeseja alterar os catequistas responsáveis?");
+            System.out.println("1 - Manter os catequistas atuais");
+            System.out.println("2 - Substituir os catequistas");
+            System.out.println("Escolha uma opção: ");
 
-            Catequista primeiroCatequista =
-                    sistema.pesquisarCatequistaPorId(idPrimeiro);
+            String opcaoCatequistas = scanner.nextLine().trim();
 
-            Turma turmaAtualizada = new Turma(
-                    idTurma,
-                    tipoTurma,
-                    primeiroCatequista
-            );
+            Turma turmaAtualizada;
+
+            switch (opcaoCatequistas) {
+                case "1":
+                    turmaAtualizada = new Turma(
+                            idTurma,
+                            tipoTurma,
+                            turmaAtual.getCatequistas().get(0)
+                    );
+
+                    for (int i = 1; i < turmaAtual.getCatequistas().size(); i ++) {
+                        turmaAtualizada.adicionarCatequista(
+                                turmaAtual.getCatequistas().get(i)
+                        );
+                    }
+                    break;
+
+                case "2":
+                    System.out.println("Digite o ID do primeiro catequista: ");
+                    String idPrimeiro = scanner.nextLine().trim();
+
+                    Catequista primeiroCatequista =
+                            sistema.pesquisarCatequistaPorId(idPrimeiro);
+
+                    turmaAtualizada = new Turma(
+                            idTurma,
+                            tipoTurma,
+                            primeiroCatequista
+                    );
+                    break;
+
+                default:
+                    System.out.println("Opção inválida. Edição cancelada.");
+                    return;
+            }
 
             while (true) {
                 System.out.println(
