@@ -244,7 +244,7 @@ public class TelaPrincipal {
     private void consultarCatequisandos(
             Scanner scanner, Catequista catequista) {
 
-        System.out.println("\\n========== CONSULTAR CATEQUISANDOS ==========");
+        System.out.println("\n========== CONSULTAR CATEQUISANDOS ==========");
 
         try {
             List<Turma> turmasDisponiveis =
@@ -600,10 +600,12 @@ public class TelaPrincipal {
         System.out.println("ID da turma: " + turma.getIdTurma());
         System.out.println("Tipo: " + turma.getTipoTurma());
 
-        if (turma.getCatequista() != null) {
+        System.out.println("Catequistas responsáveis:");
+
+        for (Catequista catequista : turma.getCatequistas()) {
             System.out.println(
-                    "Catequista responsável: "
-                    + turma.getCatequista().getNome()
+                    "- " + catequista.getNome()
+                    + " (ID: " + catequista.getId() + ")"
             );
         }
     }
