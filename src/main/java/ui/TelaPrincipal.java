@@ -626,7 +626,7 @@ public class TelaPrincipal {
                 System.out.println("Data: " + noticia.getDataPublicacao());
 
                 System.out.println(
-                        "Autor: " + (noticia.getAutor() == null
+                        "Autor: " + (noticia.getAutor() != null
                                 ? noticia.getAutor().getNome()
                                 : "Não informado")
                 );
