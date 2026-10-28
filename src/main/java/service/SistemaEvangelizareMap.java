@@ -676,15 +676,53 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         validarUsuarioLogado(usuarioLogado);
 
-        List<Noticia> resultado = new ArrayList<>(noticias.values());
+        List<Noticia> resultado = noticias.values().stream()
+                .filter(noticia -> {
+
+                    Turma turmaNoticia = noticia.getTurma();
+
+                    // adm pode consultar todas as noticias
+                    if (usuarioLogado instanceof Administrador) {
+                        return true;
+                    }
+
+                    if (turmaNoticia == null) {
+                        return true;
+                    }
+
+                    // catequista consulta noticias das suas turmas
+                    if (usuarioLogado instanceof Catequista) {
+                        Catequista catequista = (Catequista) usuarioLogado;
+
+                        return turmaNoticia.getCatequistas().stream()
+                                .anyMatch(responsavel ->
+                                        responsavel.getId().equals(catequista.getId())
+                                );
+                    }
+
+                    // catequisando consulta noticias da propria turma
+                    if (usuarioLogado instanceof Catequisando) {
+                        Catequisando catequisando =
+                                (Catequisando) usuarioLogado;
+
+                        Turma turmaCatequisando = catequisando.getTurma();
+
+                        return turmaCatequisando != null
+                                && turmaCatequisando.getIdTurma()
+                                .equals(turmaNoticia.getIdTurma());
+                    }
+
+                    // outros perfils que não têm acesso às noticias
+                    return false;
+                })
+                .toList();
 
         if (resultado.isEmpty()) {
             throw new NoticiaNaoEncontradaException(
-                    "Nenhuma notícia cadastrada."
+                    "Nenhuma notícia disponível para este usuário."
             );
         }
 
         return resultado;
     }
-
 }
