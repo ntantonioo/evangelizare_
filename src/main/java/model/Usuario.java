@@ -39,7 +39,13 @@ public abstract class Usuario {
     }
 
     public void setTelefone(String telefone) {
-        this.telefone = telefone;
+        if (telefone == null || telefone.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "O telefone não pode ficar vazio."
+            );
+        }
+
+        this.telefone = telefone.trim();
     }
 
     public int getIdade() {

@@ -170,6 +170,12 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
+        if (catequisando.getTurma() == null) {
+            throw new IllegalArgumentException(
+                    "O catequisando precisa estar vinculado a uma turma."
+            );
+        }
+
         // verifica as regras da turma
         TipoTurma tipo = catequisando.getTurma().getTipoTurma();
 
