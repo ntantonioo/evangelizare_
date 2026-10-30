@@ -118,7 +118,19 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
+        if (turma.getCatequistas().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Não é possível cadastrar um catequisando em uma turma sem catequistas."
+            );
+        }
+
         TipoTurma tipo = turma.getTipoTurma();
+
+        if (catequisando.getResponsaveis() == null) {
+            throw new IllegalArgumentException(
+                    "A lista de responsáveis não pode ser nula."
+            );
+        }
 
         boolean exigeResponsavel =
                 tipo == TipoTurma.CATEQUESE
@@ -173,6 +185,12 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         if (catequisando.getTurma() == null) {
             throw new IllegalArgumentException(
                     "O catequisando precisa estar vinculado a uma turma."
+            );
+        }
+
+        if (turmas.get(catequisando.getTurma().getIdTurma()) == null) {
+            throw new TurmaNaoEncontradaException(
+                    "A turma vinculada ao catequisando não está cadastrada no sistema."
             );
         }
 
