@@ -249,9 +249,28 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
-        for (Catequista catequista : turma.getCatequistas()) {
-            pesquisarCatequistaPorId(catequista.getId());
-        }
+       for (Catequista catequista : turma.getCatequistas()) {
+
+           // verifica se o catequista esta cadastrado
+           pesquisarCatequistaPorId(catequista.getId());
+
+           // verifica se ja esta associado a outra turma
+           boolean possuiOutraTurma = turmas.values().stream()
+                   .anyMatch(turmaExistente ->
+                           turmaExistente.getCatequistas().stream()
+                                   .anyMatch(catequistaExistente ->
+                                           catequistaExistente.getId()
+                                                   .equals(catequista.getId())
+                                   )
+                   );
+
+           if (possuiOutraTurma) {
+               throw new IllegalArgumentException(
+                       "O catequista " + catequista.getNome()
+                       + " já está associado a outra turma."
+               );
+           }
+       }
 
         turmas.put(turma.getIdTurma(), turma);
     }
@@ -346,6 +365,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         List<Catequista> listaValidada = new ArrayList<>();
 
         for (Catequista catequista : novosCatequistas) {
+
             boolean duplicado = listaValidada.stream()
                     .anyMatch(existente ->
                             existente.getId().equals(catequista.getId())
@@ -354,6 +374,26 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             if (duplicado) {
                 throw new IllegalArgumentException(
                         "Este catequista já está associado à turma."
+                );
+            }
+
+            // verifica se o catequista já pertence a outra turma.
+            boolean associadoAOutraTurma = turmas.values().stream()
+                    .filter(outraTurma ->
+                            !outraTurma.getIdTurma().equals(idTurma)
+                    )
+                    .anyMatch(outraTurma ->
+                            outraTurma.getCatequistas().stream()
+                                    .anyMatch(catequistaExistente ->
+                                            catequistaExistente.getId()
+                                                    .equals(catequista.getId())
+                                    )
+                    );
+
+            if (associadoAOutraTurma) {
+                throw new IllegalArgumentException(
+                        "O catequista " + catequista.getNome()
+                                + " já está associado a outra turma."
                 );
             }
 
