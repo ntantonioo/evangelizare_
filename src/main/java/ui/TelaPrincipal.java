@@ -50,12 +50,6 @@ public class TelaPrincipal {
                     autentificarUsuario(scanner);
                     break;
 
-                case 2:
-                    System.out.println(
-                            "Funcionalidade de notícias em desenvolvimento."
-                    );
-                    break;
-
                 case 0:
                     System.out.println(
                             "Ide por todo o mundo e pregai o evangelho a toda criatura."
