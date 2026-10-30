@@ -2,7 +2,6 @@ package ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import exception.CatequisandoNaoEncontradoException;
 import exception.CatequistaNaoEncontradoException;
@@ -18,6 +17,8 @@ public class TelaPrincipal {
     private final SistemaEvangelizare sistema =
             new SistemaEvangelizareMap();
 
+    private final Console console = new Console();
+
     public static void main(String[] args) {
         TelaPrincipal tela = new TelaPrincipal();
         tela.iniciar();
@@ -26,7 +27,6 @@ public class TelaPrincipal {
     public void iniciar() {
         cadastrarAdministradorInicial();
 
-        Scanner scanner = new Scanner(System.in);
         int opcao;
 
         System.out.println("================================");
@@ -43,11 +43,11 @@ public class TelaPrincipal {
             System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
 
-            opcao = scanner.nextInt();
+            opcao = console.lerInt();
 
             switch (opcao) {
                 case 1:
-                    autentificarUsuario(scanner);
+                    autentificarUsuario();
                     break;
 
                 case 0:
@@ -61,22 +61,19 @@ public class TelaPrincipal {
             }
 
         } while (opcao != 0);
-
-        scanner.close();
     }
 
     // AUTENTIFICAÇÃO DO USUARIO
 
-    private void autentificarUsuario(Scanner scanner) {
-        scanner.nextLine();
+    private void autentificarUsuario() {
 
         System.out.println("\n========== LOGIN ==========");
 
         System.out.print("ID do usuário: ");
-        String id = scanner.nextLine();
+        String id = console.lerTexto();
 
         System.out.print("Senha: ");
-        String senha = scanner.nextLine();
+        String senha = console.lerTexto();
 
         if (sistema.autenticarUsuario(id, senha)) {
             Usuario usuario = sistema.pesquisarUsuarioPorId(id);
@@ -85,15 +82,15 @@ public class TelaPrincipal {
             System.out.println("Bem-vindo(a), " + usuario.getNome() + "!");
 
             if (usuario instanceof Administrador) {
-                menuAdministrador(scanner, usuario);
+                menuAdministrador(usuario);
 
             } else if (usuario instanceof Catequista catequista) {
                 System.out.println("Perfil: Catequista");
-                menuCatequista(scanner, catequista);
+                menuCatequista(catequista);
 
             } else if (usuario instanceof Catequisando catequisando) {
                 System.out.println("Perfil: Catequisando");
-                menuCatequisando(scanner, catequisando);
+                menuCatequisando(catequisando);
             }
 
         } else {
@@ -103,7 +100,7 @@ public class TelaPrincipal {
 
     // MENU DO ADMINISTRADOR
 
-    private void menuAdministrador(Scanner scanner, Usuario usuarioLogado) {
+    private void menuAdministrador(Usuario usuarioLogado) {
         int opcao;
 
         do {
@@ -118,35 +115,35 @@ public class TelaPrincipal {
             System.out.println("0 - Encerrar sessão");
             System.out.print("Escolha uma opção: ");
 
-            opcao = scanner.nextInt();
+            opcao = console.lerInt();
 
             switch (opcao) {
                 case 1:
-                    cadastrarUsuario(scanner);
+                    cadastrarUsuario();
                     break;
 
                 case 2:
-                    cadastrarTurma(scanner);
+                    cadastrarTurma();
                     break;
 
                 case 3:
-                    editarCatequista(scanner);
+                    editarCatequista();
                     break;
 
                 case 4:
-                    menuNoticias(scanner, usuarioLogado);
+                    menuNoticias(usuarioLogado);
                     break;
 
                 case 5:
-                    editarTurma(scanner);
+                    editarTurma();
                     break;
 
                 case 6:
-                    transferirCatequisando(scanner);
+                    transferirCatequisando();
                     break;
 
                 case 7:
-                    transferirCatequista(scanner);
+                    transferirCatequista();
                     break;
 
                 case 0:
@@ -161,7 +158,7 @@ public class TelaPrincipal {
 
     // MENU CATEQUISTA
 
-    private void menuCatequista(Scanner scanner, Catequista catequista) {
+    private void menuCatequista(Catequista catequista) {
         int opcao;
 
         do {
@@ -172,34 +169,34 @@ public class TelaPrincipal {
             System.out.println("4 - Remover Catequisando");
             System.out.println("5 - Notícias");
             System.out.println("0 - Encerrar sessão");
+            System.out.print("Escolha uma opção: ");
 
-            System.out.println("Escolha uma opção: ");
-
-            opcao = scanner.nextInt();
-            scanner.nextLine();
+            opcao = console.lerInt();
 
             switch (opcao) {
                 case 1:
-                    cadastrarCatequisando(scanner, catequista);
+                    cadastrarCatequisando(catequista);
                     break;
 
                 case 2:
-                    consultarCatequisandos(scanner, catequista);
+                    consultarCatequisandos(catequista);
                     break;
 
                 case 3:
-                    editarCatequisando(scanner, catequista);
+                    editarCatequisando(catequista);
                     break;
 
                 case 4:
-                    removerCatequisando(scanner, catequista);
+                    removerCatequisando(catequista);
                     break;
 
                 case 5:
-                    menuNoticias(scanner, catequista);
+                    menuNoticias(catequista);
+                    break;
 
                 case 0:
                     System.out.println("Sessão encerrada");
+                    break;
 
                 default:
                     System.out.println("Opção inválida.");
@@ -210,7 +207,7 @@ public class TelaPrincipal {
 
     //MENU CATEQUISANDO
 
-    private void menuCatequisando(Scanner scanner, Catequisando catequisando) {
+    private void menuCatequisando(Catequisando catequisando) {
 
         int opcao;
 
@@ -221,8 +218,7 @@ public class TelaPrincipal {
             System.out.println("0 - Encerrar sessão");
             System.out.print("Escolha uma opção: ");
 
-            opcao = scanner.nextInt();
-            scanner.nextLine();
+            opcao = console.lerInt();
 
             switch (opcao) {
                 case 1:
@@ -235,6 +231,7 @@ public class TelaPrincipal {
 
                 case 0:
                     System.out.println("Sessão encerrada.");
+                    break;
 
                 default:
                     System.out.println("Opção inválida.");
@@ -245,8 +242,7 @@ public class TelaPrincipal {
 
     // CONSULTA DE CATEQUISANDOS
 
-    private void consultarCatequisandos(
-            Scanner scanner, Catequista catequista) {
+    private void consultarCatequisandos(Catequista catequista) {
 
         System.out.println("\n========== CONSULTAR CATEQUISANDOS ==========");
 
@@ -264,12 +260,12 @@ public class TelaPrincipal {
             for (Turma turma : turmasDisponiveis) {
                 System.out.println(
                         "ID: " + turma.getIdTurma()
-                        + " | Tipo: " + turma.getTipoTurma()
+                                + " | Tipo: " + turma.getTipoTurma()
                 );
             }
 
             System.out.println("\nDigite o ID da turma que deseja consultar: ");
-            String idTurma = scanner.nextLine().trim();
+            String idTurma = console.lerTexto().trim();
 
             boolean turmaPermitida = turmasDisponiveis.stream()
                     .anyMatch(t -> t.getIdTurma().equals(idTurma));
@@ -327,7 +323,7 @@ public class TelaPrincipal {
 
     // MENU NOTICIAS
 
-    private void menuNoticias(Scanner scanner, Usuario usuarioLogado) {
+    private void menuNoticias(Usuario usuarioLogado) {
         int opcao;
 
         do {
@@ -349,14 +345,13 @@ public class TelaPrincipal {
             System.out.println("0 - Voltar");
             System.out.print("Escolha uma opção: ");
 
-            opcao = scanner.nextInt();
-            scanner.nextLine();
+            opcao = console.lerInt();
 
             switch (opcao) {
                 case 1:
                     if (usuarioLogado instanceof Administrador
                             || usuarioLogado instanceof Catequista) {
-                        cadastrarNoticia(scanner, usuarioLogado);
+                        cadastrarNoticia(usuarioLogado);
 
                     } else if (usuarioLogado instanceof Catequisando) {
                         consultarNoticias(usuarioLogado);
@@ -374,7 +369,7 @@ public class TelaPrincipal {
 
                 case 3:
                     if (usuarioLogado instanceof Administrador) {
-                        removerNoticia(scanner, usuarioLogado);
+                        removerNoticia(usuarioLogado);
                     } else {
                         System.out.println("Opção inválida.");
                     }
@@ -415,17 +410,17 @@ public class TelaPrincipal {
         }
     }
 
-    private void cadastrarNoticia(Scanner scanner, Usuario usuarioLogado) {
+    private void cadastrarNoticia(Usuario usuarioLogado) {
         System.out.println("\n========== CADASTRO DE NOTÍCIA ==========");
 
         System.out.print("ID da notícia: ");
-        String id = scanner.nextLine();
+        String id = console.lerTexto();
 
         System.out.print("Título: ");
-        String titulo = scanner.nextLine();
+        String titulo = console.lerTexto();
 
         System.out.print("Conteúdo: ");
-        String conteudo = scanner.nextLine();
+        String conteudo = console.lerTexto();
 
         // Escolher a categoria da notícia
         System.out.println("\nCategorias disponíveis:");
@@ -437,8 +432,7 @@ public class TelaPrincipal {
         }
 
         System.out.print("Escolha a categoria: ");
-        int opcaoCategoria = scanner.nextInt();
-        scanner.nextLine();
+        int opcaoCategoria = console.lerInt();
 
         if (opcaoCategoria < 1 || opcaoCategoria > categorias.length) {
             System.out.println("Categoria inválida.");
@@ -456,15 +450,14 @@ public class TelaPrincipal {
                 System.out.println("2 - Notícia para uma turma específica");
                 System.out.print("Escolha uma opção: ");
 
-                int opcaoTurma = scanner.nextInt();
-                scanner.nextLine();
+                int opcaoTurma = console.lerInt();
 
                 if (opcaoTurma == 1) {
                     turmaSelecionada = null;
 
                 } else if (opcaoTurma == 2) {
                     System.out.print("ID da turma: ");
-                    String idTurma = scanner.nextLine();
+                    String idTurma = console.lerTexto();
 
                     List<Turma> turmas =
                             sistema.pesquisarTurmaPorId(idTurma);
@@ -503,7 +496,7 @@ public class TelaPrincipal {
                 }
 
                 System.out.print("ID da turma: ");
-                String idTurma = scanner.nextLine();
+                String idTurma = console.lerTexto();
 
                 for (Turma turma : turmas) {
                     if (turma.getIdTurma().equals(idTurma)) {
@@ -549,7 +542,7 @@ public class TelaPrincipal {
         }
     }
 
-    private void removerNoticia(Scanner scanner, Usuario usuarioLogado) {
+    private void removerNoticia(Usuario usuarioLogado) {
         System.out.println("\n========== REMOVER NOTÍCIA ==========");
 
         // Proteção adicional na interface.
@@ -561,7 +554,7 @@ public class TelaPrincipal {
         }
 
         System.out.print("Digite o ID da notícia que deseja remover: ");
-        String idNoticia = scanner.nextLine();
+        String idNoticia = console.lerTexto();
 
         try {
             // Verifica se a notícia existe antes de removê-la.
@@ -571,7 +564,7 @@ public class TelaPrincipal {
             System.out.println(noticia);
 
             System.out.print("Confirma a remoção? (S/N): ");
-            String confirmacao = scanner.nextLine();
+            String confirmacao = console.lerTexto();
 
             if (confirmacao.equalsIgnoreCase("S")) {
                 sistema.removerNoticia(idNoticia, usuarioLogado);
@@ -609,7 +602,7 @@ public class TelaPrincipal {
         for (Catequista catequista : turma.getCatequistas()) {
             System.out.println(
                     "- " + catequista.getNome()
-                    + " (ID: " + catequista.getId() + ")"
+                            + " (ID: " + catequista.getId() + ")"
             );
         }
     }
@@ -645,7 +638,7 @@ public class TelaPrincipal {
 
     // CADASTRO DE USUÁRIO
 
-    private void cadastrarUsuario(Scanner scanner) {
+    private void cadastrarUsuario() {
         System.out.println("\n========== CADASTRO DE USUÁRIO ==========");
         System.out.println("1 - Catequista");
         System.out.println("2 - Catequisando");
@@ -653,13 +646,12 @@ public class TelaPrincipal {
         System.out.println("0 - Voltar");
         System.out.print("Escolha uma opção: ");
 
-        int perfil = scanner.nextInt();
-        scanner.nextLine();
+        int perfil = console.lerInt();
 
         switch (perfil) {
             case 1:
                 System.out.println("Perfil selecionado: Catequista.");
-                cadastrarCatequista(scanner);
+                cadastrarCatequista();
                 break;
 
             case 2:
@@ -682,28 +674,26 @@ public class TelaPrincipal {
 
     // CADASTRAR CATEQUISTA
 
-    private void cadastrarCatequista(Scanner scanner) {
+    private void cadastrarCatequista() {
         System.out.println("\n========== CADASTRO DO CATEQUISTA ==========");
-        scanner.nextLine();
 
         System.out.println("ID do catequista: ");
-        String idCatequista = scanner.nextLine();
+        String idCatequista = console.lerTexto();
 
         System.out.println("Nome: ");
-        String nome = scanner.nextLine();
+        String nome = console.lerTexto();
 
         System.out.println("Telefone: ");
-        String telefone = scanner.nextLine();
+        String telefone = console.lerTexto();
 
         System.out.println("Idade: ");
-        int idade = scanner.nextInt();
-        scanner.nextLine();
+        int idade = console.lerInt();
 
         System.out.println("Senha: ");
-        String senha = scanner.nextLine();
+        String senha = console.lerTexto();
 
         System.out.println("Ano de ingresso na catequese: ");
-        String anoIngresso = scanner.nextLine();
+        String anoIngresso = console.lerTexto();
 
         Catequista catequista = new Catequista(
                 idCatequista,
@@ -726,13 +716,11 @@ public class TelaPrincipal {
 
     // EDITAR CATEQUISTA
 
-    private void editarCatequista(Scanner scanner) {
+    private void editarCatequista() {
         System.out.println("\n========== EDITAR CATEQUISTA ==========");
 
-        scanner.nextLine();
-
         System.out.println("ID do catequista: ");
-        String id = scanner.nextLine().trim();
+        String id = console.lerTexto().trim();
 
         try {
             Catequista catequista = sistema.pesquisarCatequistaPorId(id);
@@ -743,20 +731,13 @@ public class TelaPrincipal {
             System.out.println("Ano de ingresso atual: " + catequista.getAnoDeIngresso());
 
             System.out.println("\nNovo telefone");
-            String telefone = scanner.nextLine().trim();
+            String telefone = console.lerTexto().trim();
 
             System.out.println("Nova idade: ");
-            int idade;
-
-            try {
-                idade = Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.println("Idade inválida. A edição foi cancelada.");
-                return;
-            }
+            int idade = console.lerInt();
 
             System.out.println("Novo ano de ingresso: ");
-            String anoDeIngresso = scanner.nextLine().trim();
+            String anoDeIngresso = console.lerTexto().trim();
 
             sistema.atualizarCatequista(
                     id,
@@ -776,16 +757,16 @@ public class TelaPrincipal {
 
     // TRANSFERIR CATEQUISTA
 
-    private void transferirCatequista(Scanner scanner) {
+    private void transferirCatequista() {
 
         System.out.println("\n========== TRANSFERIR CATEQUISTA ==========");
 
         try {
             System.out.println("Informe o ID do catequista: ");
-            String idCatequista = scanner.nextLine();
+            String idCatequista = console.lerTexto();
 
             System.out.println("Informe o ID da nova turma: ");
-            String idNovaTurma = scanner.nextLine();
+            String idNovaTurma = console.lerTexto();
 
             sistema.transferirCatequista(
                     idCatequista,
@@ -795,20 +776,19 @@ public class TelaPrincipal {
             System.out.println("Catequista transferido com sucesso!");
 
         } catch (CatequistaNaoEncontradoException
-                | TurmaNaoEncontradaException
-                | IllegalArgumentException e) {
+                 | TurmaNaoEncontradaException
+                 | IllegalArgumentException e) {
 
             System.out.println(
                     "Não foi possível realizar a transferência: "
-                    + e.getMessage()
+                            + e.getMessage()
             );
         }
     }
 
     // CADASTRO DE CATEQUISANDO
 
-    private void cadastrarCatequisando(
-            Scanner scanner, Catequista catequista) {
+    private void cadastrarCatequisando(Catequista catequista) {
 
         System.out.println("\n========== CADASTRO DE CATEQUISANDO ==========");
 
@@ -825,28 +805,27 @@ public class TelaPrincipal {
             for (Turma turma : turmasDisponiveis) {
                 System.out.println(
                         "ID: " + turma.getIdTurma()
-                        + " | Tipo: " + turma.getTipoTurma()
+                                + " | Tipo: " + turma.getTipoTurma()
                 );
             }
 
             System.out.println("\nDigite o ID do catequisando: ");
-            String id = scanner.nextLine();
+            String id = console.lerTexto();
 
             System.out.println("Digite o nome do catequisando: ");
-            String nome = scanner.nextLine();
+            String nome = console.lerTexto();
 
             System.out.println("Digite o telefone do catequisando: ");
-            String telefone = scanner.nextLine();
+            String telefone = console.lerTexto();
 
             System.out.println("Digite a idade: ");
-            int idade = scanner.nextInt();
-            scanner.nextLine();
+            int idade = console.lerInt();
 
             System.out.println("Digite a senha: ");
-            String senha = scanner.nextLine();
+            String senha = console.lerTexto();
 
             System.out.println("Digite o ID da turma: ");
-            String idTurma = scanner.nextLine().trim();
+            String idTurma = console.lerTexto().trim();
 
             Turma turmaSelecionada = null;
 
@@ -877,7 +856,7 @@ public class TelaPrincipal {
 
             boolean exigeResponsavel =
                     tipo == TipoTurma.CATEQUESE
-                    || tipo == TipoTurma.CRISMA_JOVEM;
+                            || tipo == TipoTurma.CRISMA_JOVEM;
 
             boolean cadastrarResponsavel = exigeResponsavel;
 
@@ -887,20 +866,20 @@ public class TelaPrincipal {
                 );
 
                 cadastrarResponsavel =
-                        scanner.nextLine().trim().equalsIgnoreCase("S");
+                        console.lerTexto().trim().equalsIgnoreCase("S");
             }
 
             while (cadastrarResponsavel) {
                 System.out.println("\n--- DADOS DO RESPONSÁVEL ---");
 
                 System.out.println("Nome do responsável: ");
-                String nomeResponsavel = scanner.nextLine();
+                String nomeResponsavel = console.lerTexto();
 
                 System.out.println("Telefone do responsável: ");
-                String telefoneResponsavel = scanner.nextLine();
+                String telefoneResponsavel = console.lerTexto();
 
                 System.out.println("Parentesco: ");
-                String parentesco = scanner.nextLine();
+                String parentesco = console.lerTexto();
 
                 Responsavel responsavel = new Responsavel(
                         nomeResponsavel,
@@ -915,7 +894,7 @@ public class TelaPrincipal {
                 );
 
                 cadastrarResponsavel =
-                        scanner.nextLine().trim().equalsIgnoreCase("S");
+                        console.lerTexto().trim().equalsIgnoreCase("S");
             }
 
             sistema.cadastrarCatequisando(novoCatequisando);
@@ -935,8 +914,7 @@ public class TelaPrincipal {
 
     // EDITAR CATEQUISANDO
 
-    private void editarCatequisando(
-            Scanner scanner, Catequista catequista) {
+    private void editarCatequisando(Catequista catequista) {
 
         System.out.println("\n========== EDITAR CATEQUISANDO ==========");
 
@@ -960,7 +938,7 @@ public class TelaPrincipal {
             }
 
             System.out.print("\nDigite o ID da turma: ");
-            String idTurma = scanner.nextLine().trim();
+            String idTurma = console.lerTexto().trim();
 
             boolean turmaPermitida = turmasDisponiveis.stream()
                     .anyMatch(t -> t.getIdTurma().equals(idTurma));
@@ -991,7 +969,7 @@ public class TelaPrincipal {
             System.out.print(
                     "\nDigite o ID do catequisando que deseja editar: "
             );
-            String idCatequisando = scanner.nextLine().trim();
+            String idCatequisando = console.lerTexto().trim();
 
             // Localiza o catequisando somente na turma autorizada.
             Catequisando selecionado = null;
@@ -1016,23 +994,13 @@ public class TelaPrincipal {
                     "Novo telefone (atual: "
                             + selecionado.getTelefone() + "): "
             );
-            String telefone = scanner.nextLine().trim();
+            String telefone = console.lerTexto().trim();
 
             System.out.print(
                     "Nova idade (atual: "
                             + selecionado.getIdade() + "): "
             );
-
-            int idade;
-
-            try {
-                idade = Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.println(
-                        "Idade inválida. Informe um número inteiro."
-                );
-                return;
-            }
+            int idade = console.lerInt();
 
             List<Responsavel> responsaveis = new ArrayList<>();
 
@@ -1055,12 +1023,12 @@ public class TelaPrincipal {
                         "\nDeseja cadastrar responsáveis? (S/N): "
                 );
 
-                String resposta = scanner.nextLine().trim();
+                String resposta = console.lerTexto().trim();
 
                 while (!resposta.equalsIgnoreCase("S")
                         && !resposta.equalsIgnoreCase("N")) {
                     System.out.print("Resposta inválida. Digite S ou N: ");
-                    resposta = scanner.nextLine().trim();
+                    resposta = console.lerTexto().trim();
                 }
 
                 adicionarResponsavel = resposta.equalsIgnoreCase("S");
@@ -1070,13 +1038,13 @@ public class TelaPrincipal {
                 System.out.println("\n--- DADOS DO RESPONSÁVEL ---");
 
                 System.out.print("Nome: ");
-                String nomeResponsavel = scanner.nextLine().trim();
+                String nomeResponsavel = console.lerTexto().trim();
 
                 System.out.print("Telefone: ");
-                String telefoneResponsavel = scanner.nextLine().trim();
+                String telefoneResponsavel = console.lerTexto().trim();
 
                 System.out.print("Parentesco: ");
-                String parentesco = scanner.nextLine().trim();
+                String parentesco = console.lerTexto().trim();
 
                 Responsavel responsavel = new Responsavel(
                         nomeResponsavel,
@@ -1090,12 +1058,12 @@ public class TelaPrincipal {
                         "Deseja adicionar outro responsável? (S/N): "
                 );
 
-                String resposta = scanner.nextLine().trim();
+                String resposta = console.lerTexto().trim();
 
                 while (!resposta.equalsIgnoreCase("S")
                         && !resposta.equalsIgnoreCase("N")) {
                     System.out.print("Resposta inválida. Digite S ou N: ");
-                    resposta = scanner.nextLine().trim();
+                    resposta = console.lerTexto().trim();
                 }
 
                 adicionarResponsavel = resposta.equalsIgnoreCase("S");
@@ -1131,7 +1099,7 @@ public class TelaPrincipal {
 
     // REMOVER CATEQUISANDO
 
-    private void removerCatequisando(Scanner scanner, Catequista catequista) {
+    private void removerCatequisando(Catequista catequista) {
         try {
             // busca as turmas do catequista
             List<Turma> turmasDisponiveis =
@@ -1152,7 +1120,7 @@ public class TelaPrincipal {
             }
 
             System.out.println("\nInforme o ID da turma: ");
-            String idTurma = scanner.nextLine().trim();
+            String idTurma = console.lerTexto().trim();
 
             boolean turmaPermitida = turmasDisponiveis.stream()
                     .anyMatch(t -> t.getIdTurma().equals(idTurma));
@@ -1176,12 +1144,12 @@ public class TelaPrincipal {
             for (Catequisando c : catequisandos) {
                 System.out.println(
                         "ID: " + c.getId()
-                        + " | Nome: " + c.getNome()
+                                + " | Nome: " + c.getNome()
                 );
             }
 
             System.out.println("\nInforme o ID do catequisando: ");
-            String idCatequisando = scanner.nextLine().trim();
+            String idCatequisando = console.lerTexto().trim();
 
             boolean catequisandoEncontrado = catequisandos.stream()
                     .anyMatch(c -> c.getId().equals(idCatequisando));
@@ -1197,7 +1165,7 @@ public class TelaPrincipal {
             System.out.println(
                     "Deseja realmente remover este catequisando? (S/N): "
             );
-            String confirmacao = scanner.nextLine().trim();
+            String confirmacao = console.lerTexto().trim();
 
             if (!confirmacao.equalsIgnoreCase("S")) {
                 System.out.println("Remoção cancelada");
@@ -1217,16 +1185,16 @@ public class TelaPrincipal {
 
     // TRANSFERIR CATEQUISANDO
 
-    private void transferirCatequisando(Scanner scanner) {
+    private void transferirCatequisando() {
 
         System.out.println("\n========== TRANSFERIR CATEQUISANDO ==========");
 
         try {
             System.out.println("Informe o ID do catequisando: ");
-            String idCatequisando = scanner.nextLine();
+            String idCatequisando = console.lerTexto();
 
             System.out.println("Informe o ID da nova Turma: ");
-            String idNovaTurma = scanner.nextLine();
+            String idNovaTurma = console.lerTexto();
 
             sistema.transferirCatequisando(
                     idCatequisando,
@@ -1238,8 +1206,8 @@ public class TelaPrincipal {
             );
 
         } catch (CatequisandoNaoEncontradoException
-                | TurmaNaoEncontradaException
-                | IllegalArgumentException e) {
+                 | TurmaNaoEncontradaException
+                 | IllegalArgumentException e) {
 
             System.out.println("Não foi possível realizar a transferência: "
                     + e.getMessage());
@@ -1248,7 +1216,7 @@ public class TelaPrincipal {
 
     // CADASTRO DE TURMA
 
-    private void cadastrarTurma(Scanner scanner) {
+    private void cadastrarTurma() {
         System.out.println("\n========== CADASTRO DE TURMA ==========");
         System.out.println("1 - Catequese Infantil");
         System.out.println("2 - Crisma Jovem");
@@ -1256,8 +1224,7 @@ public class TelaPrincipal {
         System.out.println("0 - Voltar");
         System.out.print("Escolha uma opção: ");
 
-        int etapaTurma = scanner.nextInt();
-        scanner.nextLine();
+        int etapaTurma = console.lerInt();
 
         TipoTurma tipoTurma;
 
@@ -1280,10 +1247,10 @@ public class TelaPrincipal {
         }
 
         System.out.print("Digite o ID da turma: ");
-        String idTurma = scanner.nextLine().trim();
+        String idTurma = console.lerTexto().trim();
 
         System.out.print("Digite o ID do primeiro catequista: ");
-        String primeiroCatequistaId = scanner.nextLine().trim();
+        String primeiroCatequistaId = console.lerTexto().trim();
 
         try {
             Catequista primeiroCatequista =
@@ -1300,7 +1267,7 @@ public class TelaPrincipal {
                         "Cadastrar mais um catequista na turma (S/N)? "
                 );
 
-                String resposta = scanner.nextLine().trim();
+                String resposta = console.lerTexto().trim();
 
                 if (resposta.equalsIgnoreCase("N")) {
                     break;
@@ -1308,7 +1275,7 @@ public class TelaPrincipal {
 
                 if (resposta.equalsIgnoreCase("S")) {
                     System.out.print("Digite o ID do segundo catequista: ");
-                    String segundoCatequistaId = scanner.nextLine().trim();
+                    String segundoCatequistaId = console.lerTexto().trim();
 
                     Catequista segundoCatequista =
                             sistema.pesquisarCatequistaPorId(segundoCatequistaId);
@@ -1343,11 +1310,11 @@ public class TelaPrincipal {
     }
 
     // EDITAR TURMA
-    private void editarTurma(Scanner scanner) {
+    private void editarTurma() {
         System.out.println("\n========== EDITAR TURMA ==========");
 
         System.out.println("Digite o ID da turma que deseja editar: ");
-        String idTurma = scanner.nextLine().trim();
+        String idTurma = console.lerTexto().trim();
 
         List<Turma> turmasEncontradas;
 
@@ -1374,7 +1341,7 @@ public class TelaPrincipal {
         for (Catequista catequista : turmaAtual.getCatequistas()) {
             System.out.println(
                     "- " + catequista.getNome()
-                    + " (ID: " + catequista.getId() + ")"
+                            + " (ID: " + catequista.getId() + ")"
             );
         }
 
@@ -1385,14 +1352,7 @@ public class TelaPrincipal {
         System.out.println("0 - Cancelar");
         System.out.print("Escolha uma opção: ");
 
-        int opcaoTipo;
-
-        try {
-            opcaoTipo = Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            System.out.println("Opção inválida.");
-            return;
-        }
+        int opcaoTipo = console.lerInt();
 
         TipoTurma tipoTurma;
 
@@ -1421,7 +1381,7 @@ public class TelaPrincipal {
             System.out.println("2 - Substituir os catequistas");
             System.out.println("Escolha uma opção: ");
 
-            String opcaoCatequistas = scanner.nextLine().trim();
+            String opcaoCatequistas = console.lerTexto().trim();
 
             Turma turmaAtualizada;
 
@@ -1442,7 +1402,7 @@ public class TelaPrincipal {
 
                 case "2":
                     System.out.println("Digite o ID do primeiro catequista: ");
-                    String idPrimeiro = scanner.nextLine().trim();
+                    String idPrimeiro = console.lerTexto().trim();
 
                     Catequista primeiroCatequista =
                             sistema.pesquisarCatequistaPorId(idPrimeiro);
@@ -1464,7 +1424,7 @@ public class TelaPrincipal {
                         "Deseja cadastrar um segundo catequista? (S/N ):"
                 );
 
-                String resposta = scanner.nextLine().trim();
+                String resposta = console.lerTexto().trim();
 
                 if (resposta.equalsIgnoreCase("N")) {
                     break;
@@ -1472,7 +1432,7 @@ public class TelaPrincipal {
 
                 if (resposta.equalsIgnoreCase("S")) {
                     System.out.print("Digite o ID do segundo catequista: ");
-                    String idSegundo = scanner.nextLine().trim();
+                    String idSegundo = console.lerTexto().trim();
 
                     Catequista segundoCatequista =
                             sistema.pesquisarCatequistaPorId(idSegundo);
@@ -1494,12 +1454,12 @@ public class TelaPrincipal {
             for (Catequista catequista : turmaAtualizada.getCatequistas()) {
                 System.out.println(
                         "- " + catequista.getNome()
-                        + " (ID: " + catequista.getId() + ")"
+                                + " (ID: " + catequista.getId() + ")"
                 );
             }
 
         } catch (TurmaNaoEncontradaException
-                | CatequistaNaoEncontradoException e) {
+                 | CatequistaNaoEncontradoException e) {
             System.out.println(e.getMessage());
 
         } catch (IllegalArgumentException e) {
