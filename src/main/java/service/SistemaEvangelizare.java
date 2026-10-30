@@ -59,6 +59,10 @@ public interface SistemaEvangelizare {
 
     List<Catequisando> pesquisarCatequisandosPorTurma(String idTurma);
 
+    void transferirCatequisando(String idCatequisando, String idNovaTurma)
+        throws CatequisandoNaoEncontradoException,
+            TurmaNaoEncontradaException;
+
     // Turma
 
     void cadastrarTurma(Turma turma)

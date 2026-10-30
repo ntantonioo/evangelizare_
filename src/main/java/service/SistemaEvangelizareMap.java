@@ -230,6 +230,72 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void transferirCatequisando(
+            String idCatequisando,
+            String idNovaTurma
+    ) throws CatequisandoNaoEncontradoException,
+            TurmaNaoEncontradaException {
+
+        // valida os IDs informados
+        if (idCatequisando == null || idCatequisando.isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ID do catequisando é obrigatório."
+            );
+        }
+
+        if (idNovaTurma == null || idNovaTurma.isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ID da nova turma é obrigatório."
+            );
+        }
+
+        // localiza o catequisando
+        Catequisando catequisando = pesquisarCatequisandoPorId(idCatequisando);
+
+        // localiza a turma de destino
+        Turma novaTurma = turmas.get(idNovaTurma);
+
+        if (novaTurma == null) {
+            throw new TurmaNaoEncontradaException(
+                    "Turma não encontrada: " + idNovaTurma
+            );
+        }
+
+        // verifica se a turma possui catequistas
+        if (novaTurma.getCatequistas().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "A turma de destino precisa ter pelo menos um catequista."
+            );
+        }
+
+        // impede transferencia para a mesma turma
+        if (catequisando.getTurma().getIdTurma().equals(idNovaTurma)) {
+            throw new IllegalArgumentException(
+                    "O catequisando já está associado a esta turma."
+            );
+        }
+
+        // verifica se a nova turma exige responsaveis
+        TipoTurma tipo = novaTurma.getTipoTurma();
+
+        boolean exigeResponsavel =
+                tipo == TipoTurma.CATEQUESE
+                    || tipo == TipoTurma.CRISMA_JOVEM;
+
+        if (exigeResponsavel
+                && (catequisando.getResponsaveis() == null
+                || catequisando.getResponsaveis().isEmpty())) {
+
+            throw new IllegalArgumentException(
+                    "A turma de destino exige pelo menos um responsável cadastrado."
+            );
+        }
+
+        // realiza a transferencia
+        catequisando.setTurma(novaTurma);
+    }
+
     //TURMA
 
     @Override
