@@ -41,6 +41,12 @@ public interface SistemaEvangelizare {
     void atualizarCatequista(String id, String telefone, int idade, String anoDeIngresso)
         throws CatequistaNaoEncontradoException;
 
+    void transferirCatequista(
+            String idCatequista,
+            String idNovaTurma
+    ) throws CatequistaNaoEncontradoException,
+            TurmaNaoEncontradaException;
+
     // Catequisando
 
     void cadastrarCatequisando(Catequisando catequisando)

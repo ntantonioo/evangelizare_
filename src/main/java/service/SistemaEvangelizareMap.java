@@ -88,6 +88,78 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void transferirCatequista(
+            String idCatequista,
+            String idNovaTurma
+    ) throws CatequistaNaoEncontradoException,
+            TurmaNaoEncontradaException {
+
+        if (idCatequista == null || idCatequista.isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ID do catequista é obrigatório"
+            );
+        }
+
+        if (idNovaTurma == null || idNovaTurma.isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ID da nova turma é obrigatório."
+            );
+        }
+
+        Catequista catequista =
+                pesquisarCatequistaPorId(idCatequista);
+
+        Turma novaTurma = turmas.get(idNovaTurma);
+
+        if (novaTurma == null) {
+            throw new TurmaNaoEncontradaException(
+                    "Turma não encontrada: " + idNovaTurma
+            );
+        }
+
+        Turma turmaAtual = turmas.values().stream()
+                .filter(turma ->
+                        turma.getCatequistas().stream()
+                                .anyMatch(c ->
+                                        c.getId().equals(idCatequista)
+                                )
+                )
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "O catequista não está associado a nenhuma turma."
+                ));
+
+        if (turmaAtual.getIdTurma().equals(idNovaTurma)) {
+            throw new IllegalArgumentException(
+                    "O catequista já está associado a esta turma."
+            );
+        }
+
+        if (turmaAtual.getCatequistas().size() <= 1) {
+            throw new IllegalArgumentException(
+                    "A transferência não pode deixar a turma de origem sem catequistas."
+            );
+        }
+
+        if (novaTurma.getCatequistas().size() >= 2) {
+            throw new IllegalArgumentException(
+                    "A turma de destino já possui o número máximo de catequistas."
+            );
+        }
+
+        List<Catequista> catequistasOrigem =
+                new ArrayList<>(turmaAtual.getCatequistas());
+
+        catequistasOrigem.removeIf(c ->
+                c.getId().equals(idCatequista)
+        );
+
+        turmaAtual.atualizarCatequistas(catequistasOrigem);
+
+        novaTurma.adicionarCatequista(catequista);
+    }
+
     //CATEQUISANDO
 
     @Override

@@ -120,6 +120,7 @@ public class TelaPrincipal {
             System.out.println("4 - Notícias");
             System.out.println("5 - Editar Turma");
             System.out.println("6 - Transferir Catequisando");
+            System.out.println("7 - Transferir Catequista");
             System.out.println("0 - Encerrar sessão");
             System.out.print("Escolha uma opção: ");
 
@@ -148,6 +149,10 @@ public class TelaPrincipal {
 
                 case 6:
                     transferirCatequisando(scanner);
+                    break;
+
+                case 7:
+                    transferirCatequista(scanner);
                     break;
 
                 case 0:
@@ -772,6 +777,37 @@ public class TelaPrincipal {
             System.out.println(e.getMessage());
         } catch (IllegalArgumentException e) {
             System.out.println("Não foi possível atualizar: " + e.getMessage());
+        }
+    }
+
+    // TRANSFERIR CATEQUISTA
+
+    private void transferirCatequista(Scanner scanner) {
+
+        System.out.println("\n========== TRANSFERIR CATEQUISTA ==========");
+
+        try {
+            System.out.println("Informe o ID do catequista: ");
+            String idCatequista = scanner.nextLine();
+
+            System.out.println("Informe o ID da nova turma: ");
+            String idNovaTurma = scanner.nextLine();
+
+            sistema.transferirCatequista(
+                    idCatequista,
+                    idNovaTurma
+            );
+
+            System.out.println("Catequista transferido com sucesso!");
+
+        } catch (CatequistaNaoEncontradoException
+                | TurmaNaoEncontradaException
+                | IllegalArgumentException e) {
+
+            System.out.println(
+                    "Não foi possível realizar a transferência: "
+                    + e.getMessage()
+            );
         }
     }
 
