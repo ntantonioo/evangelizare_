@@ -22,7 +22,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- AJUSTE: pacote.da.ClassePrincipal que contém o método main -->
-        <main.class>com.evangelizare.Main</main.class>
+        <main.class>ui.Main</main.class>
 
         <junit.version>5.10.2</junit.version>
     </properties>
