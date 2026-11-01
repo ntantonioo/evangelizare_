@@ -1,10 +1,11 @@
-package ui;
+package ui.telas;
 
 import exception.CatequistaNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 
 import model.*;
 import service.SistemaEvangelizare;
+import ui.Console;
 
 public class TelaCatequista {
 

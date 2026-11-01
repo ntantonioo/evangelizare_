@@ -1,4 +1,4 @@
-package ui;
+package ui.telas;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,7 @@ import exception.TurmaNaoEncontradaException;
 
 import model.*;
 import service.SistemaEvangelizare;
+import ui.Console;
 
 public class TelaCatequisando {
 
