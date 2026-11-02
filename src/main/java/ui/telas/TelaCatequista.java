@@ -41,7 +41,7 @@ public class TelaCatequista {
 
             case 3:
                 System.out.println("Perfil selecionado: Administrador.");
-                //TODO
+                cadastrarAdministrador();
                 break;
 
             case 0:
@@ -92,6 +92,46 @@ public class TelaCatequista {
 
         } catch (IllegalArgumentException e) {
             System.out.println("\nNao foi possível cadastrar: " + e.getMessage());
+        }
+    }
+
+    // CADASTRAR ADMINISTRADOR
+
+    private void cadastrarAdministrador() {
+        System.out.println("\n========== CADASTRO DO ADMINISTRADOR ==========");
+
+        System.out.println("ID do administrador: ");
+        String id = console.lerTexto().trim();
+
+        System.out.println("Nome: ");
+        String nome = console.lerTexto().trim();
+
+        System.out.println("Telefone: ");
+        String telefone = console.lerTexto().trim();
+
+        System.out.println("Idade: ");
+        int idade = console.lerInt();
+
+        System.out.println("Senha: ");
+        String senha = console.lerTexto();
+
+        System.out.println("Confirme a senha: ");
+        String confirmacao = console.lerTexto();
+
+        if (!senha.equals(confirmacao)) {
+            System.out.println("\nAs senhas não conferem. Cadastro cancelado!");
+            return;
+        }
+
+        try {
+            sistema.cadastrarAdministrador(
+                    new Administrador(id, nome, telefone, idade, senha)
+            );
+
+            System.out.println("\nAdministrador cadastrado com sucesso!");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("\nNão foi possível cadastrar: " + e.getMessage());
         }
     }
 
