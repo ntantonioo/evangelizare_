@@ -27,6 +27,7 @@ O sistema busca organizar as informações e definir permissões de acordo com o
 - [x] Implementar o gerenciamento completo de notícias.
 - [x] Cadastro e gerenciamento de catequisandos pelos catequistas responsáveis
 - [x] Controle de permissões para publicação, consulta e remoção de notícias
+- [ ] Criação de Hasher para segurança das senhas 
 - [ ] Desenvolver uma interface gráfica.
 
 > O projeto está em desenvolvimento. A lista de funcionalidades será atualizada conforme novas etapas forem concluídas.
