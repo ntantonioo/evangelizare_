@@ -2,10 +2,7 @@ package ui.menus;
 
 import model.*;
 import ui.*;
-import ui.telas.TelaCatequisando;
-import ui.telas.TelaCatequista;
-import ui.telas.TelaNoticia;
-import ui.telas.TelaTurma;
+import ui.telas.*;
 
 public class MenuAdministrador {
 
@@ -14,13 +11,17 @@ public class MenuAdministrador {
     private final TelaTurma telaTurma;
     private final TelaNoticia telaNoticia;
     private final TelaCatequisando telaCatequisando;
+    private final TelaAtividade telaAtividade;
 
-    public MenuAdministrador(Console console, TelaCatequista telaCatequista, TelaTurma telaTurma, TelaNoticia telaNoticia, TelaCatequisando telaCatequisando) {
+    public MenuAdministrador(Console console, TelaCatequista telaCatequista, TelaTurma
+            telaTurma, TelaNoticia telaNoticia, TelaCatequisando telaCatequisando, TelaAtividade
+            telaAtividade) {
         this.console = console;
         this.telaCatequista = telaCatequista;
         this.telaTurma = telaTurma;
         this.telaNoticia = telaNoticia;
         this.telaCatequisando = telaCatequisando;
+        this.telaAtividade = telaAtividade;
     }
 
     public void exibir(Usuario usuarioLogado) {
@@ -35,6 +36,7 @@ public class MenuAdministrador {
             System.out.println("5 - Editar Turma");
             System.out.println("6 - Transferir Catequisando");
             System.out.println("7 - Transferir Catequista");
+            System.out.println("8 - Atividades");
             System.out.println("0 - Encerrar sessão");
             System.out.print("Escolha uma opção: ");
 
@@ -67,6 +69,10 @@ public class MenuAdministrador {
 
                 case 7:
                     telaCatequista.transferir();
+                    break;
+
+                case 8:
+                    telaAtividade.menu(usuarioLogado);
                     break;
 
                 case 0:
