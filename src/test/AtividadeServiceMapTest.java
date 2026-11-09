@@ -18,15 +18,6 @@ import model.*;
 import service.*;
 import service.atividade.AtividadeServiceMap;
 
-/**
- * Testa as regras das atividades. A data de "hoje" é fixa (04/11/2026).
- *
- *   ADM001 (administrador)
- *   CAT001 Maria -> INF-01 (Catequese Infantil), com o catequisando CQS001
- *   CAT002 João  -> CJ-01  (Crisma Jovem), com o catequisando CQS002
- *   CAT003 Rosa e CAT004 Pedro -> DUO-01 (Crisma Adulto), os dois juntos
- *   CAT005 Lúcia -> sem turma
- */
 class AtividadeServiceMapTest {
 
     static {
