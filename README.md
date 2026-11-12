@@ -42,6 +42,7 @@ O sistema contempla três perfis principais:
 | **Administrador** | Cadastrar catequistas, gerenciar turmas e publicar notícias. |
 | **Catequista** | Cadastrar catequisandos e acompanhar as informações relacionadas à catequese. |
 | **Catequisando** | Consultar informações e notícias disponibilizadas pelo sistema. |
+| **Responsável** | Consultar as informações e andamento do catequisando que é responsável. |
 
 ## 📚 Tipos de turma
 
