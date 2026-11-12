@@ -6,6 +6,7 @@ import exception.CatequisandoNaoEncontradoException;
 import exception.CatequistaNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 import exception.NoticiaNaoEncontradaException;
+import exception.ResponsavelNaoEncontradoException;
 
 import model.Noticia;
 import model.TipoNoticia;
@@ -15,6 +16,7 @@ import model.Catequista;
 import model.Turma;
 import model.Usuario;
 import model.Responsavel;
+import model.VinculoResponsavel;
 
 public interface SistemaEvangelizare {
 
@@ -39,7 +41,7 @@ public interface SistemaEvangelizare {
     List<Catequista> pesquisarCatequistaPorNome(String nome);
 
     void atualizarCatequista(String id, String telefone, int idade, String anoDeIngresso)
-        throws CatequistaNaoEncontradoException;
+            throws CatequistaNaoEncontradoException;
 
     void transferirCatequista(
             String idCatequista,
@@ -52,8 +54,8 @@ public interface SistemaEvangelizare {
     void cadastrarCatequisando(Catequisando catequisando)
             throws TurmaNaoEncontradaException;
 
-    void atualizarCatequisando(String id, String telefone, int idade, List<Responsavel> responsaveis)
-        throws CatequisandoNaoEncontradoException;
+    void atualizarCatequisando(String id, String telefone, int idade, List<VinculoResponsavel> vinculos)
+            throws CatequisandoNaoEncontradoException;
 
     void removerCatequisando(String id)
             throws CatequisandoNaoEncontradoException;
@@ -66,8 +68,16 @@ public interface SistemaEvangelizare {
     List<Catequisando> pesquisarCatequisandosPorTurma(String idTurma);
 
     void transferirCatequisando(String idCatequisando, String idNovaTurma)
-        throws CatequisandoNaoEncontradoException,
+            throws CatequisandoNaoEncontradoException,
             TurmaNaoEncontradaException;
+
+    // Responsável
+
+    Responsavel pesquisarResponsavelPorId(String id)
+            throws ResponsavelNaoEncontradoException;
+
+    List<Catequisando> pesquisarCatequisandosPorResponsavel(String idResponsavel)
+            throws ResponsavelNaoEncontradoException;
 
     // Turma
 
@@ -78,7 +88,7 @@ public interface SistemaEvangelizare {
             throws TurmaNaoEncontradaException;
 
     void editarTurma(Turma turma)
-        throws TurmaNaoEncontradaException,
+            throws TurmaNaoEncontradaException,
             CatequistaNaoEncontradoException;
 
     List<Turma> pesquisarTurmaPorId(String idTurma)
@@ -103,11 +113,11 @@ public interface SistemaEvangelizare {
             throws NoticiaNaoEncontradaException;
 
     Noticia pesquisarNoticiaPorId(String idNoticia)
-        throws NoticiaNaoEncontradaException;
+            throws NoticiaNaoEncontradaException;
 
     List<Noticia> pesquisarNoticiaPorTipo(TipoNoticia tipoNoticia)
-        throws NoticiaNaoEncontradaException;
+            throws NoticiaNaoEncontradaException;
 
     List<Noticia> pesquisarNoticiasDisponiveisPara(Usuario usuarioLogado)
-        throws NoticiaNaoEncontradaException;
+            throws NoticiaNaoEncontradaException;
 }

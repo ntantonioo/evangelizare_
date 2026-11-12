@@ -1,5 +1,6 @@
 package service;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -10,14 +11,18 @@ import exception.CatequistaNaoEncontradoException;
 import exception.CatequisandoNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 import exception.NoticiaNaoEncontradaException;
+import exception.ResponsavelNaoEncontradoException;
 
 import model.*;
+import seguranca.SenhaHasher;
 
 public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     private Map<String, Usuario> usuarios = new HashMap<>();
 
     private Map<String, Catequista> catequistas = new HashMap<>();
+
+    private Map<String, Responsavel> responsaveis = new HashMap<>();
     private Map<String, Catequisando> catequisandos = new HashMap<>();
     private Map<String, Turma> turmas = new HashMap<>();
     private Map<String, Noticia> noticias = new HashMap<>();
@@ -27,6 +32,15 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     @Override
     public void cadastrarCatequista(Catequista catequista) {
         validarNovoUsuario(catequista);
+
+        if (catequista.getAnoDeIngresso() == null
+                || catequista.getAnoDeIngresso().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O ano de ingresso é obrigatório."
+            );
+        }
+
+        protegerSenha(catequista);
 
         catequistas.put(catequista.getId(), catequista);
         usuarios.put(catequista.getId(), catequista);
@@ -63,9 +77,18 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public void atualizarCatequista(String id, String telefone, int idade, String anoDeIngresso)
-        throws CatequistaNaoEncontradoException {
+            throws CatequistaNaoEncontradoException {
 
         Catequista catequista = pesquisarCatequistaPorId(id);
+
+        // Valida tudo antes de alterar, para não deixar o cadastro pela metade.
+        validarTelefoneEIdade(telefone, idade);
+
+        if (anoDeIngresso == null || anoDeIngresso.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "O ano de ingresso não pode ficar vazio."
+            );
+        }
 
         catequista.atualizarTelefone(telefone);
         catequista.atualizarIdade(idade);
@@ -206,7 +229,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         boolean exigeResponsavel =
                 tipo == TipoTurma.CATEQUESE
-                || tipo == TipoTurma.CRISMA_JOVEM;
+                        || tipo == TipoTurma.CRISMA_JOVEM;
 
         if (exigeResponsavel
                 && catequisando.getResponsaveis().isEmpty()) {
@@ -216,7 +239,13 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
+        // Responsáveis novos só são cadastrados se tudo estiver válido.
+        List<Responsavel> novosResponsaveis =
+                validarResponsaveis(catequisando.getVinculos());
+
         catequisando.setTurma(turma);
+        protegerSenha(catequisando);
+        registrarResponsaveis(novosResponsaveis);
 
         catequisandos.put(catequisando.getId(), catequisando);
         usuarios.put(catequisando.getId(), catequisando);
@@ -241,14 +270,14 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public void atualizarCatequisando(String id, String telefone, int idade, List<Responsavel> responsaveis)
-        throws CatequisandoNaoEncontradoException {
+    public void atualizarCatequisando(String id, String telefone, int idade, List<VinculoResponsavel> vinculos)
+            throws CatequisandoNaoEncontradoException {
 
         // verifica se o catequisando existe
         Catequisando catequisando = pesquisarCatequisandoPorId(id);
 
         // verifica se a lista de responsaveis foi informada
-        if (responsaveis == null) {
+        if (vinculos == null) {
             throw new IllegalArgumentException(
                     "A lista de responsáveis não pode ser nula."
             );
@@ -271,18 +300,104 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         boolean exigeResponsavel =
                 tipo == TipoTurma.CATEQUESE
-                || tipo == TipoTurma.CRISMA_JOVEM;
+                        || tipo == TipoTurma.CRISMA_JOVEM;
 
-        if (exigeResponsavel && responsaveis.isEmpty()) {
+        if (exigeResponsavel && vinculos.isEmpty()) {
             throw new IllegalArgumentException(
                     "Esta turma exige pelo menos um responsável cadastrado."
             );
         }
 
-        // Atualiza os dados após validar as regras
+        // Valida telefone e idade antes de alterar qualquer dado.
+        validarTelefoneEIdade(telefone, idade);
+
+        List<Responsavel> novosResponsaveis = validarResponsaveis(vinculos);
+
+        // Atualiza os dados após validar as regras. A lista de responsáveis vai
+        // primeiro porque ela ainda pode ser recusada (responsável repetido).
+        catequisando.atualizarResponsaveis(vinculos);
         catequisando.atualizarTelefone(telefone);
         catequisando.atualizarIdade(idade);
-        catequisando.atualizarResponsaveis(responsaveis);
+        registrarResponsaveis(novosResponsaveis);
+    }
+
+    // RESPONSÁVEL
+
+    @Override
+    public Responsavel pesquisarResponsavelPorId(String id)
+            throws ResponsavelNaoEncontradoException {
+
+        Responsavel responsavel = id == null ? null : responsaveis.get(id.trim());
+
+        if (responsavel == null) {
+            throw new ResponsavelNaoEncontradoException(
+                    "Responsável não encontrado: " + id
+            );
+        }
+
+        return responsavel;
+    }
+
+    @Override
+    public List<Catequisando> pesquisarCatequisandosPorResponsavel(String idResponsavel)
+            throws ResponsavelNaoEncontradoException {
+
+        Responsavel responsavel = pesquisarResponsavelPorId(idResponsavel);
+
+        return catequisandos.values().stream()
+                .filter(c -> c.possuiResponsavel(responsavel.getId()))
+                .sorted(Comparator.comparing(Catequisando::getNome)
+                        .thenComparing(Catequisando::getId))
+                .collect(Collectors.toList());
+    }
+
+    private static final int IDADE_MINIMA_RESPONSAVEL = 18;
+
+    // Confere os responsáveis informados. Os que já existem precisam ser o
+    // mesmo objeto cadastrado; os novos precisam ser válidos e maiores de idade.
+    // Devolve os novos, que só serão cadastrados depois de tudo validado.
+    private List<Responsavel> validarResponsaveis(List<VinculoResponsavel> vinculos) {
+        List<Responsavel> novos = new ArrayList<>();
+
+        for (VinculoResponsavel vinculo : vinculos) {
+            if (vinculo == null) {
+                throw new IllegalArgumentException(
+                        "A lista não pode conter responsáveis nulos."
+                );
+            }
+
+            Responsavel responsavel = vinculo.getResponsavel();
+            Usuario existente = usuarios.get(responsavel.getId());
+
+            if (existente == null) {
+                validarNovoUsuario(responsavel);
+
+                if (responsavel.getIdade() < IDADE_MINIMA_RESPONSAVEL) {
+                    throw new IllegalArgumentException(
+                            "O responsável " + responsavel.getNome()
+                                    + " deve ser maior de idade."
+                    );
+                }
+
+                novos.add(responsavel);
+
+            } else if (existente != responsavel) {
+                throw new IllegalArgumentException(
+                        "O ID " + responsavel.getId()
+                                + " já pertence a outro usuário."
+                );
+            }
+        }
+
+        return novos;
+    }
+
+    private void registrarResponsaveis(List<Responsavel> novos) {
+        for (Responsavel responsavel : novos) {
+            protegerSenha(responsavel);
+            usuarios.put(responsavel.getId(), responsavel);
+            responsaveis.put(responsavel.getId(), responsavel);
+        }
     }
 
     @Override
@@ -353,7 +468,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         boolean exigeResponsavel =
                 tipo == TipoTurma.CATEQUESE
-                    || tipo == TipoTurma.CRISMA_JOVEM;
+                        || tipo == TipoTurma.CRISMA_JOVEM;
 
         if (exigeResponsavel
                 && (catequisando.getResponsaveis() == null
@@ -387,6 +502,12 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
+        if (turma.getTipoTurma() == null) {
+            throw new IllegalArgumentException(
+                    "O tipo da turma é obrigatório."
+            );
+        }
+
         if (turma.getCatequistas().isEmpty()) {
             throw new IllegalArgumentException(
                     "A turma precisa ter pelo menos um catequista."
@@ -405,28 +526,28 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
-       for (Catequista catequista : turma.getCatequistas()) {
+        for (Catequista catequista : turma.getCatequistas()) {
 
-           // verifica se o catequista esta cadastrado
-           pesquisarCatequistaPorId(catequista.getId());
+            // verifica se o catequista esta cadastrado
+            pesquisarCatequistaPorId(catequista.getId());
 
-           // verifica se ja esta associado a outra turma
-           boolean possuiOutraTurma = turmas.values().stream()
-                   .anyMatch(turmaExistente ->
-                           turmaExistente.getCatequistas().stream()
-                                   .anyMatch(catequistaExistente ->
-                                           catequistaExistente.getId()
-                                                   .equals(catequista.getId())
-                                   )
-                   );
+            // verifica se ja esta associado a outra turma
+            boolean possuiOutraTurma = turmas.values().stream()
+                    .anyMatch(turmaExistente ->
+                            turmaExistente.getCatequistas().stream()
+                                    .anyMatch(catequistaExistente ->
+                                            catequistaExistente.getId()
+                                                    .equals(catequista.getId())
+                                    )
+                    );
 
-           if (possuiOutraTurma) {
-               throw new IllegalArgumentException(
-                       "O catequista " + catequista.getNome()
-                       + " já está associado a outra turma."
-               );
-           }
-       }
+            if (possuiOutraTurma) {
+                throw new IllegalArgumentException(
+                        "O catequista " + catequista.getNome()
+                                + " já está associado a outra turma."
+                );
+            }
+        }
 
         turmas.put(turma.getIdTurma(), turma);
     }
@@ -445,15 +566,15 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         boolean possuiCatequisandos = catequisandos.values().stream()
                 .anyMatch(catequisando ->
                         catequisando.getTurma() !=null
-                        && catequisando.getTurma()
+                                && catequisando.getTurma()
                                 .getIdTurma().equals(idTurma)
                 );
 
         if (possuiCatequisandos) {
             throw new IllegalArgumentException(
                     "Não é possível remover esta turma, pois "
-                    + "existem catequisandos vinculados a ela. "
-                    + "Transfira-os para outra turma antes de remôve-la."
+                            + "existem catequisandos vinculados a ela. "
+                            + "Transfira-os para outra turma antes de remôve-la."
             );
         }
 
@@ -636,7 +757,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public List<Turma> pesquisarTurmaPorCatequisando(String catequisandoId)
-        throws CatequisandoNaoEncontradoException,
+            throws CatequisandoNaoEncontradoException,
             TurmaNaoEncontradaException {
 
         Catequisando catequisando = pesquisarCatequisandoPorId(catequisandoId);
@@ -658,6 +779,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     @Override
     public void cadastrarAdministrador(Administrador administrador) {
         validarNovoUsuario(administrador);
+        protegerSenha(administrador);
         usuarios.put(administrador.getId(), administrador);
     }
 
@@ -671,8 +793,27 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         Usuario usuario = pesquisarUsuarioPorId(id);
 
         return usuario != null
-                && usuario.getSenha() != null
-                && usuario.getSenha().equals(senha);
+                && SenhaHasher.verificar(senha, usuario.getSenha());
+    }
+
+    private void validarTelefoneEIdade(String telefone, int idade) {
+        if (telefone == null || telefone.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "O telefone não pode ficar vazio"
+            );
+        }
+
+        if (idade <= 0) {
+            throw new IllegalArgumentException(
+                    "A idade deve ser maior que zero."
+            );
+        }
+    }
+
+    // Troca a senha digitada pelo seu hash. É chamado uma única vez por usuário,
+    // no cadastro, depois de todas as validações.
+    private void protegerSenha(Usuario usuario) {
+        usuario.setSenha(SenhaHasher.gerarHash(usuario.getSenha()));
     }
 
     private void validarNovoUsuario(Usuario usuario) {
@@ -691,6 +832,30 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         if (usuarios.containsKey(usuario.getId())) {
             throw new IllegalArgumentException(
                     "Já existe um usuário cadastrado com esse ID."
+            );
+        }
+
+        if (usuario.getNome() == null || usuario.getNome().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O nome do usuário é obrigatório."
+            );
+        }
+
+        if (usuario.getTelefone() == null || usuario.getTelefone().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O telefone do usuário é obrigatório."
+            );
+        }
+
+        if (usuario.getSenha() == null || usuario.getSenha().isBlank()) {
+            throw new IllegalArgumentException(
+                    "A senha do usuário é obrigatória."
+            );
+        }
+
+        if (usuario.getIdade() <= 0) {
+            throw new IllegalArgumentException(
+                    "A idade deve ser maior que zero."
             );
         }
     }
@@ -835,7 +1000,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public Noticia pesquisarNoticiaPorId(String idNoticia)
-        throws NoticiaNaoEncontradaException {
+            throws NoticiaNaoEncontradaException {
 
         Noticia noticia = noticias.get(idNoticia);
 
@@ -850,7 +1015,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
     @Override
     public List<Noticia> pesquisarNoticiaPorTipo(TipoNoticia tipoNoticia)
-        throws NoticiaNaoEncontradaException {
+            throws NoticiaNaoEncontradaException {
 
         if (tipoNoticia == null) {
             throw new IllegalArgumentException(
