@@ -1,4 +1,4 @@
-package security;
+package seguranca;
 
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -12,6 +12,9 @@ public final class SenhaHasher {
 
     private static final String PREFIXO = "pbkdf2-sha256";
     private static final String ALGORITMO = "PBKDF2WithHmacSHA256";
+    // 600 mil é o valor de uso real. Os testes automatizados reduzem este valor
+    // (mínimo 1000) pela propriedade evangelizare.hash.iteracoes, para não
+    // ficarem lentos; em produção essa propriedade não deve ser definida.
     private static final int ITERACOES = Math.max(1_000,
             Integer.getInteger("evangelizare.hash.iteracoes", 600_000));
     private static final int BYTES_SALT = 16;
@@ -38,7 +41,7 @@ public final class SenhaHasher {
                 + Base64.getEncoder().encodeToString(hash);
     }
 
-    // Retorna true se a senha digitada corresponde ao hash guardado.
+    // Retorna true se a senha digitada corresponde ao hash guardado
     public static boolean verificar(String senhaDigitada, String hashGuardado) {
         if (senhaDigitada == null || !ehHash(hashGuardado)) {
             return false;
@@ -58,6 +61,8 @@ public final class SenhaHasher {
             byte[] calculado = derivar(
                     senhaDigitada, salt, iteracoes, esperado.length * 8);
 
+            // Comparação em tempo constante: não revela, pelo tempo de resposta,
+            // quantos bytes iniciais estavam certos.
             return MessageDigest.isEqual(calculado, esperado);
 
         } catch (IllegalArgumentException e) {
@@ -66,7 +71,7 @@ public final class SenhaHasher {
         }
     }
 
-    //Diz se o texto tem o formato de um hash gerado por esta classe.
+    // Diz se o texto tem o formato de um hash gerado por esta classe
     public static boolean ehHash(String valor) {
         return valor != null
                 && valor.startsWith(PREFIXO + "$")
