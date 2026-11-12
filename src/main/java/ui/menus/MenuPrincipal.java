@@ -11,13 +11,15 @@ public class MenuPrincipal {
     private final MenuAdministrador menuAdministrador;
     private final MenuCatequista menuCatequista;
     private final MenuCatequisando menuCatequisando;
+    private final MenuResponsavel menuResponsavel;
 
-    public MenuPrincipal(SistemaEvangelizare sistema, Console console, MenuAdministrador menuAdministrador, MenuCatequista menuCatequista, MenuCatequisando menuCatequisando) {
+    public MenuPrincipal(SistemaEvangelizare sistema, Console console, MenuAdministrador menuAdministrador, MenuCatequista menuCatequista, MenuCatequisando menuCatequisando, MenuResponsavel menuResponsavel) {
         this.sistema = sistema;
         this.console = console;
         this.menuAdministrador = menuAdministrador;
         this.menuCatequista = menuCatequista;
         this.menuCatequisando = menuCatequisando;
+        this.menuResponsavel = menuResponsavel;
     }
 
     public void iniciar() {
@@ -85,6 +87,10 @@ public class MenuPrincipal {
             } else if (usuario instanceof Catequisando catequisando) {
                 System.out.println("Perfil: Catequisando");
                 menuCatequisando.exibir(catequisando);
+
+            } else if (usuario instanceof Responsavel responsavel) {
+                System.out.println("Perfil: Responsável");
+                menuResponsavel.exibir(responsavel);
             }
 
         } else {

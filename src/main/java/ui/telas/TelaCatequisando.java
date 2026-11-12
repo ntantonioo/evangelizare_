@@ -5,11 +5,12 @@ import java.util.List;
 
 import exception.CatequisandoNaoEncontradoException;
 import exception.CatequistaNaoEncontradoException;
+import exception.ResponsavelNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 
 import model.*;
-import service.SistemaEvangelizare;
 import ui.Console;
+import service.SistemaEvangelizare;
 
 public class TelaCatequisando {
 
@@ -82,17 +83,14 @@ public class TelaCatequisando {
                 if (c.getResponsaveis().isEmpty()) {
                     System.out.println("Nenhum responsável cadastrado.");
                 } else {
-                    for (Responsavel responsavel : c.getResponsaveis()) {
+                    for (VinculoResponsavel vinculo : c.getVinculos()) {
+                        Responsavel responsavel = vinculo.getResponsavel();
+
                         System.out.println("------------------------------");
-                        System.out.println(
-                                "Nome: " + responsavel.getNomeResponsavel()
-                        );
-                        System.out.println(
-                                "Telefone: " + responsavel.getTelefoneResponsavel()
-                        );
-                        System.out.println(
-                                "Parentesco: " + responsavel.getParentesco()
-                        );
+                        System.out.println("ID: " + responsavel.getId());
+                        System.out.println("Nome: " + responsavel.getNome());
+                        System.out.println("Telefone: " + responsavel.getTelefone());
+                        System.out.println("Parentesco: " + vinculo.getParentesco());
                     }
                 }
             }
@@ -199,43 +197,12 @@ public class TelaCatequisando {
                     tipo == TipoTurma.CATEQUESE
                             || tipo == TipoTurma.CRISMA_JOVEM;
 
-            boolean cadastrarResponsavel = exigeResponsavel;
-
-            if (!exigeResponsavel) {
-                System.out.println(
-                        "\nDeseja cadastrar um responsavel? (S/N):"
+            // Responsáveis: contas já existentes (pelo ID) ou novas
+            for (VinculoResponsavel vinculo : lerResponsaveis(exigeResponsavel)) {
+                novoCatequisando.adicionarResponsavel(
+                        vinculo.getResponsavel(),
+                        vinculo.getParentesco()
                 );
-
-                cadastrarResponsavel =
-                        console.lerTexto().trim().equalsIgnoreCase("S");
-            }
-
-            while (cadastrarResponsavel) {
-                System.out.println("\n--- DADOS DO RESPONSÁVEL ---");
-
-                System.out.println("Nome do responsável: ");
-                String nomeResponsavel = console.lerTexto();
-
-                System.out.println("Telefone do responsável: ");
-                String telefoneResponsavel = console.lerTexto();
-
-                System.out.println("Parentesco: ");
-                String parentesco = console.lerTexto();
-
-                Responsavel responsavel = new Responsavel(
-                        nomeResponsavel,
-                        telefoneResponsavel,
-                        parentesco
-                );
-
-                novoCatequisando.adicionarResponsavel(responsavel);
-
-                System.out.println(
-                        "\nDeseja cadastrar outro responsável? (S/N): "
-                );
-
-                cadastrarResponsavel =
-                        console.lerTexto().trim().equalsIgnoreCase("S");
             }
 
             sistema.cadastrarCatequisando(novoCatequisando);
@@ -343,8 +310,6 @@ public class TelaCatequisando {
             );
             int idade = console.lerInt();
 
-            List<Responsavel> responsaveis = new ArrayList<>();
-
             System.out.println("\nCadastre os responsáveis atualizados.");
             System.out.println(
                     "A lista atual será substituída pela nova lista informada."
@@ -356,61 +321,9 @@ public class TelaCatequisando {
                     tipo == TipoTurma.CATEQUESE
                             || tipo == TipoTurma.CRISMA_JOVEM;
 
-            boolean adicionarResponsavel = true;
+            List<VinculoResponsavel> vinculos = lerResponsaveis(exigeResponsavel);
 
-            // Nas turmas que não exigem responsáveis, o cadastro é opcional.
-            if (!exigeResponsavel) {
-                System.out.print(
-                        "\nDeseja cadastrar responsáveis? (S/N): "
-                );
-
-                String resposta = console.lerTexto().trim();
-
-                while (!resposta.equalsIgnoreCase("S")
-                        && !resposta.equalsIgnoreCase("N")) {
-                    System.out.print("Resposta inválida. Digite S ou N: ");
-                    resposta = console.lerTexto().trim();
-                }
-
-                adicionarResponsavel = resposta.equalsIgnoreCase("S");
-            }
-
-            while (adicionarResponsavel) {
-                System.out.println("\n--- DADOS DO RESPONSÁVEL ---");
-
-                System.out.print("Nome: ");
-                String nomeResponsavel = console.lerTexto().trim();
-
-                System.out.print("Telefone: ");
-                String telefoneResponsavel = console.lerTexto().trim();
-
-                System.out.print("Parentesco: ");
-                String parentesco = console.lerTexto().trim();
-
-                Responsavel responsavel = new Responsavel(
-                        nomeResponsavel,
-                        telefoneResponsavel,
-                        parentesco
-                );
-
-                responsaveis.add(responsavel);
-
-                System.out.print(
-                        "Deseja adicionar outro responsável? (S/N): "
-                );
-
-                String resposta = console.lerTexto().trim();
-
-                while (!resposta.equalsIgnoreCase("S")
-                        && !resposta.equalsIgnoreCase("N")) {
-                    System.out.print("Resposta inválida. Digite S ou N: ");
-                    resposta = console.lerTexto().trim();
-                }
-
-                adicionarResponsavel = resposta.equalsIgnoreCase("S");
-            }
-
-            if (responsaveis.isEmpty() && exigeResponsavel) {
+            if (vinculos.isEmpty() && exigeResponsavel) {
                 System.out.println(
                         "Esta turma exige pelo menos um responsável."
                 );
@@ -421,7 +334,7 @@ public class TelaCatequisando {
                     idCatequisando,
                     telefone,
                     idade,
-                    responsaveis
+                    vinculos
             );
 
             System.out.println("\nDados atualizados com sucesso!");
@@ -553,5 +466,133 @@ public class TelaCatequisando {
             System.out.println("Não foi possível realizar a transferência: "
                     + e.getMessage());
         }
+    }
+
+    // RESPONSÁVEIS (usados no cadastro e na edição de catequisandos)
+
+    // Lê os responsáveis do catequisando. Cada um pode ser uma conta que já
+    // existe (informando o ID) ou uma conta nova, cadastrada junto.
+    private List<VinculoResponsavel> lerResponsaveis(boolean obrigatorio) {
+        List<VinculoResponsavel> vinculos = new ArrayList<>();
+
+        boolean adicionar = true;
+
+        // Nas turmas que não exigem responsáveis, o cadastro é opcional.
+        if (!obrigatorio) {
+            System.out.println("\nDeseja cadastrar responsáveis? (S/N): ");
+            adicionar = lerSimNao();
+        }
+
+        while (adicionar) {
+            System.out.println("\n--- RESPONSÁVEL ---");
+            System.out.println(
+                    "ID do responsável (deixe em branco para cadastrar um novo): "
+            );
+            String id = console.lerTexto().trim();
+
+            Responsavel responsavel =
+                    id.isEmpty() ? lerNovoResponsavel() : buscarResponsavel(id);
+
+            if (responsavel != null) {
+                adicionarVinculo(vinculos, responsavel);
+            }
+
+            System.out.println("\nDeseja adicionar outro responsável? (S/N): ");
+            adicionar = lerSimNao();
+        }
+
+        return vinculos;
+    }
+
+    private void adicionarVinculo(
+            List<VinculoResponsavel> vinculos, Responsavel responsavel) {
+
+        boolean jaInformado = vinculos.stream()
+                .anyMatch(v -> v.getResponsavel().getId().equals(responsavel.getId()));
+
+        if (jaInformado) {
+            System.out.println("Este responsável já foi informado.");
+            return;
+        }
+
+        System.out.println("Parentesco com o catequisando: ");
+        String parentesco = console.lerTexto();
+
+        try {
+            vinculos.add(new VinculoResponsavel(responsavel, parentesco));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Não foi possível adicionar: " + e.getMessage());
+        }
+    }
+
+    private Responsavel buscarResponsavel(String id) {
+        try {
+            Responsavel responsavel = sistema.pesquisarResponsavelPorId(id);
+
+            System.out.println("Responsável encontrado: " + responsavel.getNome());
+
+            return responsavel;
+
+        } catch (ResponsavelNaoEncontradoException e) {
+            System.out.println(
+                    e.getMessage()
+                            + ". Para cadastrar um novo, deixe o ID em branco."
+            );
+            return null;
+        }
+    }
+
+    private Responsavel lerNovoResponsavel() {
+        System.out.println("Novo responsável (ele poderá entrar no sistema com este ID).");
+
+        System.out.println("ID de acesso: ");
+        String id = console.lerTexto().trim();
+
+        if (sistema.pesquisarUsuarioPorId(id) != null) {
+            System.out.println(
+                    "Já existe um usuário com esse ID. Se ele já é um responsável "
+                            + "cadastrado, informe o ID dele na pergunta anterior."
+            );
+            return null;
+        }
+
+        System.out.println("Nome: ");
+        String nome = console.lerTexto();
+
+        System.out.println("Telefone: ");
+        String telefone = console.lerTexto();
+
+        System.out.println("Idade: ");
+        int idade = console.lerInt();
+
+        System.out.println("Senha inicial: ");
+        String senha = console.lerTexto();
+
+        System.out.println("Confirme a senha: ");
+        String confirmacao = console.lerTexto();
+
+        if (!senha.equals(confirmacao)) {
+            System.out.println("As senhas não conferem. Responsável não adicionado.");
+            return null;
+        }
+
+        try {
+            return new Responsavel(id, nome, telefone, idade, senha);
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Não foi possível adicionar: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean lerSimNao() {
+        String resposta = console.lerTexto().trim();
+
+        while (!resposta.equalsIgnoreCase("S") && !resposta.equalsIgnoreCase("N")) {
+            System.out.print("Resposta inválida. Digite S ou N: ");
+            resposta = console.lerTexto().trim();
+        }
+
+        return resposta.equalsIgnoreCase("S");
     }
 }
