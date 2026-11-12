@@ -6,7 +6,7 @@ import java.util.List;
 public class Catequisando extends Usuario{
 
     private Turma turma;
-    private List<Responsavel> responsaveis;
+    private List<VinculoResponsavel> vinculos;
 
     public Catequisando(
             String id,
@@ -31,7 +31,7 @@ public class Catequisando extends Usuario{
         }
 
         this.turma = turma;
-        this.responsaveis = new ArrayList<>();
+        this.vinculos = new ArrayList<>();
     }
 
     private static String validarCampo(String valor, String campo) {
@@ -87,40 +87,80 @@ public class Catequisando extends Usuario{
         setIdade(idade);
     }
 
-    public void atualizarResponsaveis(List<Responsavel> responsaveis) {
-        if (responsaveis == null) {
+    // Substitui todos os responsáveis. Valida a lista inteira antes de alterar
+    public void atualizarResponsaveis(List<VinculoResponsavel> novosVinculos) {
+        if (novosVinculos == null) {
             throw new IllegalArgumentException(
                     "A lista de responsáveis não pode ser nula."
             );
         }
 
-        List<Responsavel> novaLista = new ArrayList<>();
+        List<VinculoResponsavel> novaLista = new ArrayList<>();
 
-        for (Responsavel responsavel : responsaveis) {
-            if (responsavel == null) {
+        for (VinculoResponsavel vinculo : novosVinculos) {
+            if (vinculo == null) {
                 throw new IllegalArgumentException(
                         "A lista não pode conter responsáveis nulos."
                 );
             }
 
-            novaLista.add(responsavel);
+            if (contem(novaLista, vinculo.getResponsavel().getId())) {
+                throw new IllegalArgumentException(
+                        "O responsável " + vinculo.getResponsavel().getNome()
+                                + " foi informado mais de uma vez."
+                );
+            }
+
+            novaLista.add(vinculo);
         }
 
-        this.responsaveis = novaLista;
+        this.vinculos = novaLista;
     }
 
-    public List<Responsavel> getResponsaveis() {
-        return new ArrayList<>(responsaveis);
-    }
+    public void adicionarResponsavel(Responsavel responsavel, String parentesco) {
+        VinculoResponsavel vinculo = new VinculoResponsavel(responsavel, parentesco);
 
-    public void adicionarResponsavel(Responsavel responsavel) {
-        if (responsavel == null) {
+        if (contem(vinculos, responsavel.getId())) {
             throw new IllegalArgumentException(
-                    "O responsável não pode ser nulo"
+                    "Este responsável já está vinculado ao catequisando."
             );
         }
 
-        responsaveis.add(responsavel);
+        vinculos.add(vinculo);
+    }
+
+    public List<VinculoResponsavel> getVinculos() {
+        return new ArrayList<>(vinculos);
+    }
+
+    public List<Responsavel> getResponsaveis() {
+        List<Responsavel> lista = new ArrayList<>();
+
+        for (VinculoResponsavel vinculo : vinculos) {
+            lista.add(vinculo.getResponsavel());
+        }
+
+        return lista;
+    }
+
+    public boolean possuiResponsavel(String idResponsavel) {
+        return contem(vinculos, idResponsavel);
+    }
+
+    /** Parentesco com o responsável informado, ou null se não for responsável dele. */
+    public String getParentescoDe(String idResponsavel) {
+        for (VinculoResponsavel vinculo : vinculos) {
+            if (vinculo.getResponsavel().getId().equals(idResponsavel)) {
+                return vinculo.getParentesco();
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean contem(List<VinculoResponsavel> lista, String idResponsavel) {
+        return lista.stream()
+                .anyMatch(v -> v.getResponsavel().getId().equals(idResponsavel));
     }
 
     @Override
@@ -131,7 +171,7 @@ public class Catequisando extends Usuario{
                 ", telefone='" + getTelefone() + '\'' +
                 ", idade=" + getIdade() +
                 ", turma=" + turma +
-                ", quantidadeResponsaveis=" + responsaveis.size() +
+                ", quantidadeResponsaveis=" + vinculos.size() +
                 '}';
     }
 }

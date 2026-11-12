@@ -1,42 +1,55 @@
 package model;
 
-public class Responsavel {
-
-    private String nomeResponsavel;
-    private String telefoneResponsavel;
-    private String parentesco;
+public class Responsavel extends Usuario {
 
     public Responsavel(
-            String nomeResponsavel,
-            String telefoneResponsavel,
-            String parentesco) {
-
-        validarCampo(nomeResponsavel, "O nome do responsável");
-        validarCampo(telefoneResponsavel, "O telefone do responsável");
-        validarCampo(parentesco, "O parentesco");
-
-        this.nomeResponsavel = nomeResponsavel;
-        this.telefoneResponsavel = telefoneResponsavel;
-        this.parentesco = parentesco;
+            String id,
+            String nome,
+            String telefone,
+            int idade,
+            String senha
+    ) {
+        super(
+                validarCampo(id, "O ID"),
+                validarCampo(nome, "O nome"),
+                validarCampo(telefone, "O telefone"),
+                validarIdade(idade),
+                validarSenha(senha)
+        );
     }
 
-    private void validarCampo(String valor, String campo) {
+    private static String validarCampo(String valor, String campo) {
         if (valor == null || valor.trim().isEmpty()) {
             throw new IllegalArgumentException(
                     campo + " não pode ficar vazio."
             );
         }
+
+        return valor.trim();
     }
 
-    public String getNomeResponsavel() {
-        return nomeResponsavel;
+    private static int validarIdade(int idade) {
+        if (idade <= 0) {
+            throw new IllegalArgumentException(
+                    "A idade deve ser maior que zero."
+            );
+        }
+
+        return idade;
     }
 
-    public String getTelefoneResponsavel() {
-        return telefoneResponsavel;
+    private static String validarSenha(String senha) {
+        if (senha == null || senha.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "A senha não pode ficar vazia."
+            );
+        }
+
+        return senha;
     }
 
-    public String getParentesco() {
-        return parentesco;
+    @Override
+    public String toString() {
+        return "Responsavel{id='" + getId() + "', nome='" + getNome() + "'}";
     }
 }
