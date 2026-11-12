@@ -1,4 +1,8 @@
+import service.SistemaEvangelizareMap;
+
 import static org.junit.jupiter.api.Assertions.*;
+
+import service.atividade.*;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -15,8 +19,6 @@ import org.junit.jupiter.api.Test;
 import exception.AtividadeNaoEncontradaException;
 import exception.TurmaNaoEncontradaException;
 import model.*;
-import service.*;
-import service.atividade.AtividadeServiceMap;
 
 class AtividadeServiceMapTest {
 
@@ -67,15 +69,13 @@ class AtividadeServiceMapTest {
         sistema.cadastrarCatequisando(alunoJovem);
     }
 
-    // ---------- auxiliares ----------
-
     private static Catequista catequista(String id, String nome) {
         return new Catequista(id, nome, "83988880000", 35, "senha123", "2018");
     }
 
     private static Catequisando catequisando(String id, Turma turma) {
         Catequisando c = new Catequisando(id, "Aluno " + id, "83966660000", 12, "senha123", turma);
-        c.adicionarResponsavel(new Responsavel("Paula Lima", "83977770000", "Mãe"));
+        c.adicionarResponsavel(new Responsavel("RESP-" + id, "Responsável " + id, "83977770000", 40, "senha123"), "Mãe");
         return c;
     }
 
@@ -91,8 +91,6 @@ class AtividadeServiceMapTest {
         assertTrue(e.getMessage().contains(trecho),
                 "Mensagem esperada com \"" + trecho + "\", mas foi: " + e.getMessage());
     }
-
-    // =====================================================================
 
     @Nested
     @DisplayName("Publicar")
@@ -208,8 +206,6 @@ class AtividadeServiceMapTest {
         }
     }
 
-    // =====================================================================
-
     @Nested
     @DisplayName("Alterar")
     class Alterar {
@@ -273,8 +269,6 @@ class AtividadeServiceMapTest {
         }
     }
 
-    // =====================================================================
-
     @Nested
     @DisplayName("Remover e pesquisar")
     class RemoverEPesquisar {
@@ -327,8 +321,6 @@ class AtividadeServiceMapTest {
             assertThrows(AtividadeNaoEncontradaException.class, () -> atividades.pesquisarAtividadePorId(null));
         }
     }
-
-    // =====================================================================
 
     @Nested
     @DisplayName("Quem vê o quê")
