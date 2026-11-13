@@ -14,6 +14,7 @@ import exception.NoticiaNaoEncontradaException;
 import exception.ResponsavelNaoEncontradoException;
 
 import model.*;
+import security.PoliticaDeSenha;
 import seguranca.SenhaHasher;
 
 public class SistemaEvangelizareMap implements  SistemaEvangelizare {
@@ -319,6 +320,98 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         catequisando.atualizarTelefone(telefone);
         catequisando.atualizarIdade(idade);
         registrarResponsaveis(novosResponsaveis);
+    }
+
+    // SENHAS E PRIMEIRO ACESSO
+
+    @Override
+    public boolean existeAdministrador() {
+        return usuarios.values().stream().anyMatch(u -> u instanceof Administrador);
+    }
+
+    @Override
+    public void cadastrarAdministradorInicial(Administrador administrador) {
+        if (existeAdministrador()) {
+            throw new IllegalArgumentException(
+                    "O administrador inicial só pode ser criado quando ainda não há administradores."
+            );
+        }
+
+        if (administrador == null) {
+            throw new IllegalArgumentException(
+                    "O administrador não pode ser nulo."
+            );
+        }
+
+        PoliticaDeSenha.validar(administrador.getSenha());
+
+        cadastrarAdministrador(administrador);
+
+        // A senha foi escolhida pelo próprio administrador, então não é provisória
+        administrador.setSenhaProvisoria(false);
+    }
+
+    @Override
+    public void alterarSenha(String idUsuario, String senhaAtual, String novaSenha) {
+        Usuario usuario = buscarUsuario(idUsuario);
+
+        if (!SenhaHasher.verificar(senhaAtual, usuario.getSenha())) {
+            throw new IllegalArgumentException(
+                    "A senha atual está incorreta."
+            );
+        }
+
+        PoliticaDeSenha.validar(novaSenha);
+
+        if (novaSenha.equals(senhaAtual)) {
+            throw new IllegalArgumentException(
+                    "A nova senha deve ser diferente da atual."
+            );
+        }
+
+        usuario.setSenha(SenhaHasher.gerarHash(novaSenha));
+        usuario.setSenhaProvisoria(false);
+    }
+
+    @Override
+    public void redefinirSenha(
+            String idUsuario,
+            String senhaProvisoria,
+            Usuario administradorLogado) {
+
+        if (!(administradorLogado instanceof Administrador)
+                || usuarios.get(administradorLogado.getId()) != administradorLogado) {
+            throw new IllegalArgumentException(
+                    "Somente o administrador pode redefinir senhas."
+            );
+        }
+
+        Usuario usuario = buscarUsuario(idUsuario);
+
+        if (usuario == administradorLogado) {
+            throw new IllegalArgumentException(
+                    "Para trocar a sua própria senha, use a opção Alterar minha senha."
+            );
+        }
+
+        if (senhaProvisoria == null || senhaProvisoria.isBlank()) {
+            throw new IllegalArgumentException(
+                    "A senha provisória não pode ficar vazia."
+            );
+        }
+
+        usuario.setSenha(SenhaHasher.gerarHash(senhaProvisoria));
+        usuario.setSenhaProvisoria(true);
+    }
+
+    private Usuario buscarUsuario(String id) {
+        Usuario usuario = id == null ? null : usuarios.get(id.trim());
+
+        if (usuario == null) {
+            throw new IllegalArgumentException("Usuário não encontrado.");
+        }
+
+        return usuario;
     }
 
     // RESPONSÁVEL
@@ -814,6 +907,9 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     // no cadastro, depois de todas as validações.
     private void protegerSenha(Usuario usuario) {
         usuario.setSenha(SenhaHasher.gerarHash(usuario.getSenha()));
+
+        // Quem cadastra define a senha, então o usuário precisa trocá-la ao entrar.
+        usuario.setSenhaProvisoria(true);
     }
 
     private void validarNovoUsuario(Usuario usuario) {

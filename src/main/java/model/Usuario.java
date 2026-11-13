@@ -8,6 +8,7 @@ public abstract class Usuario {
     private String telefone;
     private int idade;
     private String senha;
+    private boolean senhaProvisoria;
 
     public Usuario(String id, String nome, String telefone,
                    int idade, String senha) {
@@ -16,6 +17,14 @@ public abstract class Usuario {
         this.telefone = telefone;
         this.idade = idade;
         this.senha = senha;
+    }
+
+    public boolean isSenhaProvisoria() {
+        return senhaProvisoria;
+    }
+
+    public void setSenhaProvisoria(boolean senhaProvisoria) {
+        this.senhaProvisoria = senhaProvisoria;
     }
 
     public String getId() {

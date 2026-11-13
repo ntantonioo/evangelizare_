@@ -28,6 +28,19 @@ public interface SistemaEvangelizare {
 
     boolean autenticarUsuario(String id, String senha);
 
+    boolean existeAdministrador();
+
+    void cadastrarAdministradorInicial(Administrador administrador);
+
+    // Troca a senha do próprio usuário, que precisa informar a senha atual
+    void alterarSenha(String idUsuario, String senhaAtual, String novaSenha);
+
+    /**
+     * Define uma senha provisória para um usuário que esqueceu a dele. Só o
+     * administrador pode; o usuário será obrigado a trocá-la ao entrar
+     */
+    void redefinirSenha(String idUsuario, String senhaProvisoria, Usuario administradorLogado);
+
     // Catequista
 
     void cadastrarCatequista(Catequista catequista);
