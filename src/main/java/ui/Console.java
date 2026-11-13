@@ -31,6 +31,17 @@ public class Console {
         }
     }
 
+    public String lerSenha() {
+        java.io.Console terminal = System.console();
+
+        if (terminal !=null) {
+            char[] digitada = terminal.readPassword();
+            return digitada == null ? "" : new String(digitada);
+        }
+
+        return scanner.nextLine();
+    }
+
     // Lê uma data no formato dd/mm/aaaa. Linha vazia devolve null
     public LocalDate lerDataOpcional() {
         while (true) {

@@ -1,7 +1,7 @@
 package ui.menus;
 
 import model.*;
-import ui.*;
+import ui.Console;
 import ui.telas.*;
 
 public class MenuAdministrador {
@@ -12,16 +12,16 @@ public class MenuAdministrador {
     private final TelaNoticia telaNoticia;
     private final TelaCatequisando telaCatequisando;
     private final TelaAtividade telaAtividade;
+    private final TelaSenha telaSenha;
 
-    public MenuAdministrador(Console console, TelaCatequista telaCatequista, TelaTurma
-            telaTurma, TelaNoticia telaNoticia, TelaCatequisando telaCatequisando, TelaAtividade
-            telaAtividade) {
+    public MenuAdministrador(Console console, TelaCatequista telaCatequista, TelaTurma telaTurma, TelaNoticia telaNoticia, TelaCatequisando telaCatequisando, TelaAtividade telaAtividade, TelaSenha telaSenha) {
         this.console = console;
         this.telaCatequista = telaCatequista;
         this.telaTurma = telaTurma;
         this.telaNoticia = telaNoticia;
         this.telaCatequisando = telaCatequisando;
         this.telaAtividade = telaAtividade;
+        this.telaSenha = telaSenha;
     }
 
     public void exibir(Usuario usuarioLogado) {
@@ -37,6 +37,8 @@ public class MenuAdministrador {
             System.out.println("6 - Transferir Catequisando");
             System.out.println("7 - Transferir Catequista");
             System.out.println("8 - Atividades");
+            System.out.println("9 - Redefinir senha de usuário");
+            System.out.println("10 - Alterar minha senha");
             System.out.println("0 - Encerrar sessão");
             System.out.print("Escolha uma opção: ");
 
@@ -73,6 +75,14 @@ public class MenuAdministrador {
 
                 case 8:
                     telaAtividade.menu(usuarioLogado);
+                    break;
+
+                case 9:
+                    telaSenha.redefinir(usuarioLogado);
+                    break;
+
+                case 10:
+                    telaSenha.alterar(usuarioLogado);
                     break;
 
                 case 0:

@@ -2,9 +2,7 @@ package ui.menus;
 
 import model.*;
 import ui.Console;
-import ui.telas.TelaAtividade;
-import ui.telas.TelaCatequisando;
-import ui.telas.TelaNoticia;
+import ui.telas.*;
 
 public class MenuCatequisando {
 
@@ -12,13 +10,14 @@ public class MenuCatequisando {
     private final TelaCatequisando telaCatequisando;
     private final TelaNoticia telaNoticia;
     private final TelaAtividade telaAtividade;
+    private final TelaSenha telaSenha;
 
-    public MenuCatequisando(Console console, TelaCatequisando telaCatequisando, TelaNoticia
-            telaNoticia, TelaAtividade telaAtividade) {
+    public MenuCatequisando(Console console, TelaCatequisando telaCatequisando, TelaNoticia telaNoticia, TelaAtividade telaAtividade, TelaSenha telaSenha) {
         this.console = console;
         this.telaCatequisando = telaCatequisando;
         this.telaNoticia = telaNoticia;
         this.telaAtividade = telaAtividade;
+        this.telaSenha = telaSenha;
     }
 
     public void exibir(Catequisando catequisando) {
@@ -30,6 +29,7 @@ public class MenuCatequisando {
             System.out.println("1 - Consultar minha turma");
             System.out.println("2 - Consultar notícias");
             System.out.println("3 - Consultar atividades");
+            System.out.println("4 - Alterar minha senha");
             System.out.println("0 - Encerrar sessão");
             System.out.print("Escolha uma opção: ");
 
@@ -46,6 +46,10 @@ public class MenuCatequisando {
 
                 case 3:
                     telaAtividade.consultarDisponiveis(catequisando);
+                    break;
+
+                case 4:
+                    telaSenha.alterar(catequisando);
                     break;
 
                 case 0:

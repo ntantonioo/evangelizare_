@@ -161,7 +161,7 @@ public class TelaCatequisando {
             int idade = console.lerInt();
 
             System.out.println("Digite a senha: ");
-            String senha = console.lerTexto();
+            String senha = console.lerSenha();
 
             System.out.println("Digite o ID da turma: ");
             String idTurma = console.lerTexto().trim();
@@ -566,10 +566,10 @@ public class TelaCatequisando {
         int idade = console.lerInt();
 
         System.out.println("Senha inicial: ");
-        String senha = console.lerTexto();
+        String senha = console.lerSenha();
 
         System.out.println("Confirme a senha: ");
-        String confirmacao = console.lerTexto();
+        String confirmacao = console.lerSenha();
 
         if (!senha.equals(confirmacao)) {
             System.out.println("As senhas não conferem. Responsável não adicionado.");

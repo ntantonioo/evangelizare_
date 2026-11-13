@@ -3,15 +3,18 @@ package ui.menus;
 import model.Responsavel;
 import ui.Console;
 import ui.telas.TelaResponsavel;
+import ui.telas.TelaSenha;
 
 public class MenuResponsavel {
 
     private final Console console;
     private final TelaResponsavel telaResponsavel;
+    private final TelaSenha telaSenha;
 
-    public MenuResponsavel(Console console, TelaResponsavel telaResponsavel) {
+    public MenuResponsavel(Console console, TelaResponsavel telaResponsavel, TelaSenha telaSenha) {
         this.console = console;
         this.telaResponsavel = telaResponsavel;
+        this.telaSenha = telaSenha;
     }
 
     public void exibir(Responsavel responsavel) {
@@ -22,6 +25,7 @@ public class MenuResponsavel {
             System.out.println("1 - Meus filhos");
             System.out.println("2 - Consultar notícias");
             System.out.println("3 - Consultar atividades");
+            System.out.println("4 - Alterar minha senha");
             System.out.println("0 - Encerrar sessão");
             System.out.print("Escolha uma opção: ");
 
@@ -38,6 +42,10 @@ public class MenuResponsavel {
 
                 case 3:
                     telaResponsavel.consultarAtividades(responsavel);
+                    break;
+
+                case 4:
+                    telaSenha.alterar(responsavel);
                     break;
 
                 case 0:

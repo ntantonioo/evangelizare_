@@ -1,5 +1,6 @@
 package ui;
 
+import model.Administrador;
 import service.SistemaEvangelizare;
 import service.SistemaEvangelizareMap;
 import service.atividade.AtividadeService;
@@ -19,6 +20,8 @@ public class Main {
         SistemaEvangelizare sistema = new SistemaEvangelizareMap();
         Console console = new Console();
 
+        criarAdministradorPeloAmbiente(sistema);
+
         //TELAS
 
         TelaCatequista telaCatequista = new TelaCatequista(sistema, console);
@@ -32,17 +35,43 @@ public class Main {
         ResponsavelService responsavelService = new ResponsavelServiceMap(sistema, atividadeService);
         TelaResponsavel telaResponsavel = new TelaResponsavel(responsavelService);
 
+        TelaSenha telaSenha = new TelaSenha(sistema, console);
+
         //MENUS
 
         MenuAdministrador menuAdministrador = new MenuAdministrador(
-                console, telaCatequista, telaTurma, telaNoticia, telaCatequisando, telaAtividade);
+                console, telaCatequista, telaTurma, telaNoticia, telaCatequisando, telaAtividade, telaSenha);
         MenuCatequista menuCatequista = new MenuCatequista(
-                console, telaCatequisando, telaNoticia, telaAtividade);
-        MenuCatequisando menuCatequisando = new MenuCatequisando(console, telaCatequisando, telaNoticia, telaAtividade);
-        MenuResponsavel menuResponsavel = new MenuResponsavel(console, telaResponsavel);
+                console, telaCatequisando, telaNoticia, telaAtividade, telaSenha);
+        MenuCatequisando menuCatequisando = new MenuCatequisando(console, telaCatequisando, telaNoticia, telaAtividade, telaSenha);
+        MenuResponsavel menuResponsavel = new MenuResponsavel(console, telaResponsavel, telaSenha);
 
         new MenuPrincipal(
-                sistema, console, menuAdministrador, menuCatequista, menuCatequisando, menuResponsavel
+                sistema, console, menuAdministrador, menuCatequista, menuCatequisando, menuResponsavel, telaSenha
         ).iniciar();
+    }
+
+    private static void criarAdministradorPeloAmbiente(SistemaEvangelizare sistema) {
+        String senha = System.getenv("EVANGELIZARE_ADMIN_SENHA");
+
+        if (senha == null || senha.isBlank() || sistema.existeAdministrador()) {
+            return;
+        }
+
+        String id = System.getenv("EVANGELIZARE_ADMIN_ID");
+
+        if (id == null || id.isBlank()) {
+            id = "ADM001";
+        }
+
+        try {
+            sistema.cadastrarAdministradorInicial(
+                    new Administrador(id.trim(), "Administrador", "00000000000", 30, senha)
+            );
+        } catch (IllegalArgumentException e) {
+            System.err.println(
+                    "EVANGELIZARE_ADMIN_SENHA ignorada: " + e.getMessage()
+            );
+        }
     }
 }

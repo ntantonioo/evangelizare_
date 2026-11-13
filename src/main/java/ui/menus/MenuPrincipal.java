@@ -3,6 +3,8 @@ package ui.menus;
 import model.*;
 import service.SistemaEvangelizare;
 import ui.Console;
+import ui.telas.TelaSenha;
+import security.PoliticaDeSenha;
 
 public class MenuPrincipal {
 
@@ -12,19 +14,21 @@ public class MenuPrincipal {
     private final MenuCatequista menuCatequista;
     private final MenuCatequisando menuCatequisando;
     private final MenuResponsavel menuResponsavel;
+    private final TelaSenha telaSenha;
 
-    public MenuPrincipal(SistemaEvangelizare sistema, Console console, MenuAdministrador menuAdministrador, MenuCatequista menuCatequista, MenuCatequisando menuCatequisando, MenuResponsavel menuResponsavel) {
+    public MenuPrincipal(SistemaEvangelizare sistema, Console console, MenuAdministrador
+                                 menuAdministrador, MenuCatequista menuCatequista, MenuCatequisando menuCatequisando,
+                         MenuResponsavel menuResponsavel, TelaSenha telaSenha) {
         this.sistema = sistema;
         this.console = console;
         this.menuAdministrador = menuAdministrador;
         this.menuCatequista = menuCatequista;
         this.menuCatequisando = menuCatequisando;
         this.menuResponsavel = menuResponsavel;
+        this.telaSenha = telaSenha;
     }
 
     public void iniciar() {
-        cadastrarAdministradorInicial();
-
         int opcao;
 
         System.out.println("================================");
@@ -32,6 +36,13 @@ public class MenuPrincipal {
         System.out.println("  Sistema de Apoio à Catequese");
         System.out.println("================================");
         System.out.println("Bem-vindo ao Evangelizare!");
+
+        if (!sistema.existeAdministrador() && !configurarPrimeiroAcesso()) {
+            System.out.println(
+                    "\nÉ preciso criar o administrador para usar o sistema. Encerrando."
+            );
+            return;
+        }
 
         // MENU PRINCIPAL
 
@@ -77,6 +88,12 @@ public class MenuPrincipal {
             System.out.println("\nLogin realizado com sucesso!");
             System.out.println("Bem-vindo(a), " + usuario.getNome() + "!");
 
+            // senha definida por outra pessoa: preicsa ser trocada para entrar
+            if (usuario.isSenhaProvisoria()
+                    && !telaSenha.trocarSenhaProvisoria(usuario, senha)) {
+                return;
+            }
+
             if (usuario instanceof Administrador) {
                 menuAdministrador.exibir(usuario);
 
@@ -98,15 +115,53 @@ public class MenuPrincipal {
         }
     }
 
-    private void cadastrarAdministradorInicial() {
-        Administrador administrador = new Administrador(
-                "ADM001",
-                "Administrador",
-                "83999999999",
-                30,
-                "admin123"
-        );
+    // PRIMEIRO ACESSO
 
-        sistema.cadastrarAdministrador(administrador);
+    private boolean configurarPrimeiroAcesso() {
+        System.out.println("\n========== PRIMEIRO ACESSO ==========");
+        System.out.println("Ainda não existe um administrador. Crie o primeiro agora.");
+        System.out.println(PoliticaDeSenha.DESCRICAO);
+
+        while (true) {
+            System.out.println("\nID do administrador (em branco para sair): ");
+            String id = console.lerTexto().trim();
+
+            if (id.isEmpty()) {
+                return false;
+            }
+
+            System.out.println("Nome: ");
+            String nome = console.lerTexto().trim();
+
+            System.out.println("Telefone: ");
+            String telefone = console.lerTexto().trim();
+
+            System.out.println("Idade: ");
+            int idade = console.lerInt();
+
+            System.out.println("Senha: ");
+            String senha = console.lerSenha();
+
+            System.out.println("Confirme a senha: ");
+            String confirmacao = console.lerSenha();
+
+            if (!senha.equals(confirmacao)) {
+                System.out.println("\nAs senhas não conferem. Tente novamente.");
+                continue;
+            }
+
+            try {
+                sistema.cadastrarAdministradorInicial(
+                        new Administrador(id, nome, telefone, idade, senha)
+                );
+
+                System.out.println("\nAdministrador criado com sucesso! Entre com o seu ID e a sua senha");
+
+                return true;
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("\nNão foi possível criar: " + e.getMessage());
+            }
+        }
     }
 }

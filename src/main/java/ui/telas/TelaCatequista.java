@@ -4,8 +4,8 @@ import exception.CatequistaNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 
 import model.*;
-import service.SistemaEvangelizare;
 import ui.Console;
+import service.SistemaEvangelizare;
 
 public class TelaCatequista {
 
@@ -71,7 +71,7 @@ public class TelaCatequista {
         int idade = console.lerInt();
 
         System.out.println("Senha: ");
-        String senha = console.lerTexto();
+        String senha = console.lerSenha();
 
         System.out.println("Ano de ingresso na catequese: ");
         String anoIngresso = console.lerTexto();
@@ -113,13 +113,13 @@ public class TelaCatequista {
         int idade = console.lerInt();
 
         System.out.println("Senha: ");
-        String senha = console.lerTexto();
+        String senha = console.lerSenha();
 
         System.out.println("Confirme a senha: ");
-        String confirmacao = console.lerTexto();
+        String confirmacao = console.lerSenha();
 
         if (!senha.equals(confirmacao)) {
-            System.out.println("\nAs senhas não conferem. Cadastro cancelado!");
+            System.out.println("\nAs senhas não conferem. Cadastro cancelado.");
             return;
         }
 
