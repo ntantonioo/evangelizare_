@@ -29,6 +29,7 @@ O sistema busca organizar as informações e definir permissões de acordo com o
 - [x] Controle de permissões para publicação, consulta e remoção de notícias
 - [x] Criação de Hasher para segurança das senhas
 - [x] Atividades: o catequista publica atividades para a sua turma, com título, descrição e prazo opcional; os catequisandos consultam; o administrador acompanha e remove.
+- [x] Banco de dados SQLite: os dados são gravados automaticamente a cada alteração e continuam lá quando o programa é fechado e aberto de novo.
 - [ ] Desenvolver uma interface gráfica.
 
 > O projeto está em desenvolvimento. A lista de funcionalidades será atualizada conforme novas etapas forem concluídas.
