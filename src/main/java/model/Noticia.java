@@ -20,12 +20,26 @@ public class Noticia {
             Usuario autor,
             Turma turma
     ) {
+        this(idNoticia, titulo, conteudo, tipoNoticia, autor, turma,
+                LocalDateTime.now());
+    }
+
+    // Usado ao carregar notícias salvas no banco, preservando a data original.
+    public Noticia(
+            String idNoticia,
+            String titulo,
+            String conteudo,
+            TipoNoticia tipoNoticia,
+            Usuario autor,
+            Turma turma,
+            LocalDateTime dataPublicacao
+    ) {
         this.idNoticia = idNoticia;
         this.titulo = titulo;
         this.conteudo = conteudo;
         this.tipoNoticia = tipoNoticia;
         this.autor = autor;
-        this.dataPublicacao = LocalDateTime.now();
+        this.dataPublicacao = dataPublicacao;
         this.turma = turma;
     }
 

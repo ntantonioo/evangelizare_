@@ -28,6 +28,63 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     private Map<String, Turma> turmas = new HashMap<>();
     private Map<String, Noticia> noticias = new HashMap<>();
 
+    // PERSISTÊNCIA (usado pela camada de banco de dados)
+
+    public List<Usuario> listarUsuarios() {
+        return new ArrayList<>(usuarios.values());
+    }
+
+    public List<Turma> listarTurmas() {
+        return new ArrayList<>(turmas.values());
+    }
+
+    public List<Noticia> listarNoticias() {
+        return new ArrayList<>(noticias.values());
+    }
+
+    public void restaurar(
+            List<Usuario> listaUsuarios,
+            List<Turma> listaTurmas,
+            List<Noticia> listaNoticias) {
+
+        usuarios.clear();
+        catequistas.clear();
+        responsaveis.clear();
+        catequisandos.clear();
+        turmas.clear();
+        noticias.clear();
+
+        for (Usuario usuario : listaUsuarios) {
+            usuarios.put(usuario.getId(), usuario);
+
+            if (usuario instanceof Catequista catequista) {
+                catequistas.put(catequista.getId(), catequista);
+            } else if (usuario instanceof Responsavel responsavel) {
+                responsaveis.put(responsavel.getId(), responsavel);
+            } else if (usuario instanceof Catequisando catequisando) {
+                catequisandos.put(catequisando.getId(), catequisando);
+            }
+        }
+
+        for (Turma turma : listaTurmas) {
+            turmas.put(turma.getIdTurma(), turma);
+        }
+
+        for (Noticia noticia : listaNoticias) {
+            noticias.put(noticia.getIdNoticia(), noticia);
+        }
+    }
+
+    // Remove as notícias cuja turma ou autor não existem mais. Ao remover uma
+    // turma ou um catequista, as publicações ligadas a eles saem junto.
+    public void descartarOrfaos() {
+        noticias.values().removeIf(noticia ->
+                (noticia.getTurma() != null
+                        && !turmas.containsKey(noticia.getTurma().getIdTurma()))
+                        || !usuarios.containsKey(noticia.getAutor().getId())
+        );
+    }
+
     //CATEQUISTA
 
     @Override
@@ -347,7 +404,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         cadastrarAdministrador(administrador);
 
-        // A senha foi escolhida pelo próprio administrador, então não é provisória
+        // A senha foi escolhida pelo próprio administrador, então não é provisória.
         administrador.setSenhaProvisoria(false);
     }
 

@@ -1,7 +1,10 @@
 package service.atividade;
 
+import service.SistemaEvangelizare;
+
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +14,6 @@ import java.util.stream.Collectors;
 import exception.AtividadeNaoEncontradaException;
 import exception.TurmaNaoEncontradaException;
 import model.*;
-import service.SistemaEvangelizare;
 
 public class AtividadeServiceMap implements AtividadeService {
 
@@ -23,12 +25,12 @@ public class AtividadeServiceMap implements AtividadeService {
         this(sistema, Clock.systemDefaultZone());
     }
 
+    // O relógio pode ser trocado nos testes, para fixar a data de "hoje".
     public AtividadeServiceMap(SistemaEvangelizare sistema, Clock relogio) {
         this.sistema = sistema;
         this.relogio = relogio;
     }
 
-    // CADASTRAR ATIVIDADE
     @Override
     public Atividade cadastrarAtividade(
             String idAtividade,
@@ -40,9 +42,9 @@ public class AtividadeServiceMap implements AtividadeService {
 
         Usuario usuario = exigirUsuarioCadastrado(usuarioLogado);
 
-        if(!(usuario instanceof Catequista autor)) {
+        if (!(usuario instanceof Catequista autor)) {
             throw new IllegalArgumentException(
-                    "Somente catequista podem publicar atividades."
+                    "Somente catequistas podem publicar atividades."
             );
         }
 
@@ -56,7 +58,7 @@ public class AtividadeServiceMap implements AtividadeService {
 
         if (!turmaPertenceAo(turma, autor)) {
             throw new IllegalArgumentException(
-                    " O catequista só pode publicar atividades para suas próprias turmas."
+                    "O catequista só pode publicar atividades para suas próprias turmas."
             );
         }
 
@@ -75,7 +77,6 @@ public class AtividadeServiceMap implements AtividadeService {
         return atividade;
     }
 
-    //ATUALIZAR/EDITAR ATIVIDADE
     @Override
     public void atualizarAtividade(
             String idAtividade,
@@ -97,7 +98,6 @@ public class AtividadeServiceMap implements AtividadeService {
         atividade.atualizar(titulo, descricao, prazo, hoje());
     }
 
-    //REMOVER ATIVIDADE
     @Override
     public void removerAtividade(String idAtividade, Usuario usuarioLogado) {
         Usuario usuario = exigirUsuarioCadastrado(usuarioLogado);
@@ -110,14 +110,13 @@ public class AtividadeServiceMap implements AtividadeService {
         if (!administrador && !autor) {
             throw new IllegalArgumentException(
                     "Somente o administrador ou o catequista que publicou "
-                    + "a atividade pode removê-la."
+                            + "a atividade pode removê-la."
             );
         }
 
         atividades.remove(atividade.getIdAtividade());
     }
 
-    //PESQUISAR ATIVIDADE POR ID
     @Override
     public Atividade pesquisarAtividadePorId(String idAtividade) {
         Atividade atividade = idAtividade == null
@@ -133,7 +132,6 @@ public class AtividadeServiceMap implements AtividadeService {
         return atividade;
     }
 
-    //PESQUISAR ATIVIDADES DISPONIVEIS PARA...
     @Override
     public List<Atividade> pesquisarAtividadesDisponiveisPara(Usuario usuario) {
         Usuario logado = exigirUsuarioCadastrado(usuario);
@@ -173,7 +171,31 @@ public class AtividadeServiceMap implements AtividadeService {
         );
     }
 
+    // PERSISTÊNCIA (usado pela camada de banco de dados)
+
+    public List<Atividade> listarAtividades() {
+        return new ArrayList<>(atividades.values());
+    }
+
+    // Substitui todas as atividades pelas carregadas do banco.
+    public void restaurar(List<Atividade> lista) {
+        atividades.clear();
+
+        for (Atividade atividade : lista) {
+            atividades.put(atividade.getIdAtividade(), atividade);
+        }
+    }
+
+    // Remove as atividades cuja turma ou autor não existem mais.
+    public void descartarOrfaos() {
+        atividades.values().removeIf(atividade ->
+                !turmaAindaExiste(atividade.getTurma())
+                        || sistema.pesquisarUsuarioPorId(atividade.getAutor().getId()) == null
+        );
+    }
+
     // AUXILIARES
+
     private LocalDate hoje() {
         return LocalDate.now(relogio);
     }
@@ -190,7 +212,6 @@ public class AtividadeServiceMap implements AtividadeService {
         return usuario;
     }
 
-    //BUSCAR TURMA
     private Turma buscarTurma(String idTurma) {
         return sistema.pesquisarTurmaPorId(idTurma).stream()
                 .filter(t -> t.getIdTurma().equals(idTurma))
@@ -215,5 +236,4 @@ public class AtividadeServiceMap implements AtividadeService {
             return false;
         }
     }
-
 }
