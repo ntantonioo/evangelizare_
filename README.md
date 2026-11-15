@@ -70,6 +70,8 @@ O código é organizado em pacotes de acordo com suas responsabilidades.
 | `model` | Representação das entidades do sistema, como usuários, turmas e notícias. |
 | `service` | Implementação das regras de negócio e operações do sistema. |
 | `exception` | Exceções específicas para situações como registros não encontrados. |
+| `persistencia` | Banco de dados SQLite: esquema, leitura, gravação das diferenças e a gravação automática após cada alteração.
+|`security`| Hash e política de senhas. 
 | `ui` | Interface de interação com o usuário, atualmente por meio do terminal. |
 
 Essa separação busca facilitar a manutenção, a leitura e a evolução do código.
