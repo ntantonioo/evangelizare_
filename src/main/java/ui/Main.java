@@ -1,6 +1,11 @@
 package ui;
 
+import java.nio.file.Path;
+
 import model.Administrador;
+import persistencia.PersistenciaAutomatica;
+import persistencia.PersistenciaException;
+import persistencia.RepositorioSqlite;
 import service.SistemaEvangelizare;
 import service.SistemaEvangelizareMap;
 import service.atividade.AtividadeService;
@@ -17,7 +22,31 @@ import ui.telas.*;
 public class Main {
 
     public static void main(String[] args) {
-        SistemaEvangelizare sistema = new SistemaEvangelizareMap();
+
+        SistemaEvangelizareMap sistemaBase = new SistemaEvangelizareMap();
+        AtividadeServiceMap atividadesBase = new AtividadeServiceMap(sistemaBase);
+
+        RepositorioSqlite repositorio;
+        PersistenciaAutomatica persistencia;
+
+        try {
+            repositorio = RepositorioSqlite.abrir(caminhoDoBanco());
+            persistencia = new PersistenciaAutomatica(repositorio, sistemaBase, atividadesBase);
+            persistencia.carregar();
+        } catch (PersistenciaException e) {
+            System.err.println("Não foi possível abrir o banco de dados: " + e.getMessage());
+            System.err.println("O sistema não foi iniciado, para não colocar os dados em risco.");
+            System.exit(1);
+            return;
+        }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(repositorio::close));
+
+        SistemaEvangelizare sistema =
+                persistencia.envolver(SistemaEvangelizare.class, sistemaBase);
+        AtividadeService atividadeService =
+                persistencia.envolver(AtividadeService.class, atividadesBase);
+
         Console console = new Console();
 
         criarAdministradorPeloAmbiente(sistema);
@@ -29,7 +58,6 @@ public class Main {
         TelaTurma telaTurma = new TelaTurma(sistema, console);
         TelaNoticia telaNoticia = new TelaNoticia(sistema, console);
 
-        AtividadeService atividadeService = new AtividadeServiceMap(sistema);
         TelaAtividade telaAtividade = new TelaAtividade(sistema, atividadeService, console);
 
         ResponsavelService responsavelService = new ResponsavelServiceMap(sistema, atividadeService);
@@ -51,6 +79,10 @@ public class Main {
         ).iniciar();
     }
 
+    // Atalho para desenvolvimento: enquanto os dados ficam só na memória, o
+    // primeiro acesso se repete a cada execução. Se a variável de ambiente
+    // EVANGELIZARE_ADMIN_SENHA estiver definida, o administrador é criado com ela
+    // (ID em EVANGELIZARE_ADMIN_ID, ou ADM001). A senha segue a política de senhas.
     private static void criarAdministradorPeloAmbiente(SistemaEvangelizare sistema) {
         String senha = System.getenv("EVANGELIZARE_ADMIN_SENHA");
 
@@ -73,5 +105,15 @@ public class Main {
                     "EVANGELIZARE_ADMIN_SENHA ignorada: " + e.getMessage()
             );
         }
+    }
+
+    private static Path caminhoDoBanco() {
+        String configurado = System.getenv("EVANGELIZARE_BANCO");
+
+        if (configurado == null || configurado.isBlank()) {
+            return Path.of("dados", "evangelizare.db");
+        }
+
+        return Path.of(configurado.trim());
     }
 }
