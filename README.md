@@ -29,6 +29,7 @@ O sistema busca organizar as informações e definir permissões de acordo com o
 - [x] Controle de permissões para publicação, consulta e remoção de notícias
 - [x] Criação de Hasher para segurança das senhas
 - [x] Atividades: o catequista publica atividades para a sua turma, com título, descrição e prazo opcional; os catequisandos consultam; o administrador acompanha e remove.
+- [x] Banco de dados SQLite: os dados são gravados automaticamente a cada alteração e continuam lá quando o programa é fechado e aberto de novo.
 - [ ] Desenvolver uma interface gráfica.
 
 > O projeto está em desenvolvimento. A lista de funcionalidades será atualizada conforme novas etapas forem concluídas.
@@ -69,6 +70,8 @@ O código é organizado em pacotes de acordo com suas responsabilidades.
 | `model` | Representação das entidades do sistema, como usuários, turmas e notícias. |
 | `service` | Implementação das regras de negócio e operações do sistema. |
 | `exception` | Exceções específicas para situações como registros não encontrados. |
+| `persistencia` | Banco de dados SQLite: esquema, leitura, gravação das diferenças e a gravação automática após cada alteração.
+|`security`| Hash e política de senhas. 
 | `ui` | Interface de interação com o usuário, atualmente por meio do terminal. |
 
 Essa separação busca facilitar a manutenção, a leitura e a evolução do código.
