@@ -11,6 +11,13 @@ import java.util.Map;
 
 import model.*;
 
+/**
+ * converte os objetos do sitema em linhas de tabela, e as linhas de volta em
+ * objetos.
+ * Ligaçoes entre objetos viram ID´s nas linhas e sao refeitas ao carregar, de modo que
+ * continuam sendo os mesmos objetos que o sistema usa na memória
+ */
+
 final class Mapeador {
 
     private Mapeador() {
@@ -25,6 +32,8 @@ final class Mapeador {
 
         return linhas;
     }
+
+    // objetos --> linhas
 
     static Map<Tabela, Map<String, List<Object>>> paraLinhas(Estado estado) {
         Map<Tabela, Map<String, List<Object>>> linhas = linhasVazias();
@@ -118,6 +127,8 @@ final class Mapeador {
             Map<Tabela, Map<String, List<Object>>> linhas, Tabela tabela, List<Object> linha) {
         linhas.get(tabela).put(tabela.chaveDe(linha), linha);
     }
+
+    // linhas --> objetos
 
     static Estado paraObjetos(Map<Tabela, Map<String, List<Object>>> linhas) {
         try {

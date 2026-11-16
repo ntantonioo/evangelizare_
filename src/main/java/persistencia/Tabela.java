@@ -2,6 +2,10 @@ package persistencia;
 
 import java.util.List;
 
+// as tabelas do banco e suas colunas. O tipo de cada coluna é uma letra:
+// S = texto, I = número inteiro
+// a chave é o conjunto de colunas que identifica cada linha
+
 enum Tabela {
 
     USUARIO("usuario",
