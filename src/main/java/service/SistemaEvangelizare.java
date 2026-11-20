@@ -26,18 +26,36 @@ public interface SistemaEvangelizare {
 
     Usuario pesquisarUsuarioPorId(String id);
 
-    boolean autenticarUsuario(String id, String senha);
+    /**
+     * Confere nome de usuário e senha. Falha também quando o código de primeiro
+     * acesso venceu, e para crianças da Catequese Infantil, que não têm acesso
+     * próprio (quem acompanha é o responsável).
+     */
+    boolean autenticarUsuario(String login, String senha);
+
+    Usuario pesquisarUsuarioPorLogin(String login);
+
+    List<Usuario> pesquisarUsuarioPorNome(String nome);
+
+    List<Responsavel> pesquisarResponsavelPorNome(String nome);
+
+    /** Sugere um nome de usuário livre a partir do nome da pessoa. */
+    String sugerirLogin(String nome);
 
     boolean existeAdministrador();
 
+    /**
+     * Cria o primeiro administrador. Só funciona enquanto não existe nenhum
+     * administrador, e a senha precisa seguir a política de senhas.
+     */
     void cadastrarAdministradorInicial(Administrador administrador);
 
-    // Troca a senha do próprio usuário, que precisa informar a senha atual
+    /** Troca a senha do próprio usuário, que precisa informar a senha atual. */
     void alterarSenha(String idUsuario, String senhaAtual, String novaSenha);
 
     /**
      * Define uma senha provisória para um usuário que esqueceu a dele. Só o
-     * administrador pode; o usuário será obrigado a trocá-la ao entrar
+     * administrador pode; o usuário será obrigado a trocá-la ao entrar.
      */
     void redefinirSenha(String idUsuario, String senhaProvisoria, Usuario administradorLogado);
 

@@ -1,10 +1,13 @@
 package service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import exception.CatequistaNaoEncontradoException;
@@ -14,6 +17,7 @@ import exception.NoticiaNaoEncontradaException;
 import exception.ResponsavelNaoEncontradoException;
 
 import model.*;
+import security.GeradorDeCredenciais;
 import security.PoliticaDeSenha;
 import seguranca.SenhaHasher;
 
@@ -27,6 +31,22 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     private Map<String, Catequisando> catequisandos = new HashMap<>();
     private Map<String, Turma> turmas = new HashMap<>();
     private Map<String, Noticia> noticias = new HashMap<>();
+
+    private static final int VALIDADE_DO_CODIGO_EM_DIAS =
+            GeradorDeCredenciais.VALIDADE_DO_CODIGO_EM_DIAS;
+
+    private static final Pattern LOGIN_VALIDO = Pattern.compile("[A-Za-z0-9._-]{3,40}");
+
+    private final Clock relogio;
+
+    public SistemaEvangelizareMap() {
+        this(Clock.systemDefaultZone());
+    }
+
+    // O relógio pode ser trocado nos testes, para fixar a data de "hoje".
+    public SistemaEvangelizareMap(Clock relogio) {
+        this.relogio = relogio;
+    }
 
     // PERSISTÊNCIA (usado pela camada de banco de dados)
 
@@ -42,6 +62,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         return new ArrayList<>(noticias.values());
     }
 
+    // Substitui t0do o conteúdo do sistema pelos dados carregados do banco.
     public void restaurar(
             List<Usuario> listaUsuarios,
             List<Turma> listaTurmas,
@@ -299,7 +320,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         // Responsáveis novos só são cadastrados se tudo estiver válido.
         List<Responsavel> novosResponsaveis =
-                validarResponsaveis(catequisando.getVinculos());
+                validarResponsaveis(catequisando.getVinculos(), catequisando);
 
         catequisando.setTurma(turma);
         protegerSenha(catequisando);
@@ -406,13 +427,14 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         // A senha foi escolhida pelo próprio administrador, então não é provisória.
         administrador.setSenhaProvisoria(false);
+        administrador.setProvisoriaValidaAte(null);
     }
 
     @Override
     public void alterarSenha(String idUsuario, String senhaAtual, String novaSenha) {
         Usuario usuario = buscarUsuario(idUsuario);
 
-        if (!SenhaHasher.verificar(senhaAtual, usuario.getSenha())) {
+        if (!senhaConfere(usuario, senhaAtual)) {
             throw new IllegalArgumentException(
                     "A senha atual está incorreta."
             );
@@ -428,6 +450,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         usuario.setSenha(SenhaHasher.gerarHash(novaSenha));
         usuario.setSenhaProvisoria(false);
+        usuario.setProvisoriaValidaAte(null);
     }
 
     @Override
@@ -451,6 +474,13 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             );
         }
 
+        if (semAcessoProprio(usuario)) {
+            throw new IllegalArgumentException(
+                    "Crianças da Catequese Infantil não têm acesso próprio: "
+                            + "o acesso é feito pelos responsáveis."
+            );
+        }
+
         if (senhaProvisoria == null || senhaProvisoria.isBlank()) {
             throw new IllegalArgumentException(
                     "A senha provisória não pode ficar vazia."
@@ -459,6 +489,8 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         usuario.setSenha(SenhaHasher.gerarHash(senhaProvisoria));
         usuario.setSenhaProvisoria(true);
+        usuario.setProvisoriaValidaAte(
+                LocalDateTime.now(relogio).plusDays(VALIDADE_DO_CODIGO_EM_DIAS));
     }
 
     private Usuario buscarUsuario(String id) {
@@ -507,7 +539,21 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     // mesmo objeto cadastrado; os novos precisam ser válidos e maiores de idade.
     // Devolve os novos, que só serão cadastrados depois de tudo validado.
     private List<Responsavel> validarResponsaveis(List<VinculoResponsavel> vinculos) {
+        return validarResponsaveis(vinculos, null);
+    }
+
+    // "emCadastro" é o catequisando que está sendo cadastrado junto: o login e o ID
+    // dele também não podem ser repetidos pelos responsáveis novos.
+    private List<Responsavel> validarResponsaveis(
+            List<VinculoResponsavel> vinculos, Catequisando emCadastro) {
+
         List<Responsavel> novos = new ArrayList<>();
+        List<String> reservados = new ArrayList<>();
+
+        if (emCadastro != null) {
+            reservados.add(emCadastro.getId().toLowerCase());
+            reservados.add(emCadastro.getLogin().toLowerCase());
+        }
 
         for (VinculoResponsavel vinculo : vinculos) {
             if (vinculo == null) {
@@ -529,6 +575,16 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                     );
                 }
 
+                if (reservados.contains(responsavel.getId().toLowerCase())
+                        || reservados.contains(responsavel.getLogin().toLowerCase())) {
+                    throw new IllegalArgumentException(
+                            "O ID ou o nome de usuário de " + responsavel.getNome()
+                                    + " repete o de outra pessoa deste mesmo cadastro."
+                    );
+                }
+
+                reservados.add(responsavel.getId().toLowerCase());
+                reservados.add(responsavel.getLogin().toLowerCase());
                 novos.add(responsavel);
 
             } else if (existente != responsavel) {
@@ -939,11 +995,86 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     }
 
     @Override
-    public boolean autenticarUsuario(String id, String senha) {
-        Usuario usuario = pesquisarUsuarioPorId(id);
+    public Usuario pesquisarUsuarioPorLogin(String login) {
+        if (login == null) {
+            return null;
+        }
 
-        return usuario != null
-                && SenhaHasher.verificar(senha, usuario.getSenha());
+        String procurado = login.trim();
+
+        return usuarios.values().stream()
+                .filter(u -> u.getLogin() != null && u.getLogin().equalsIgnoreCase(procurado))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    public List<Usuario> pesquisarUsuarioPorNome(String nome) {
+        String procurado = nome == null ? "" : nome.trim().toLowerCase();
+
+        return usuarios.values().stream()
+                .filter(u -> u.getNome().toLowerCase().contains(procurado))
+                .sorted(Comparator.comparing(Usuario::getNome).thenComparing(Usuario::getId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Responsavel> pesquisarResponsavelPorNome(String nome) {
+        String procurado = nome == null ? "" : nome.trim().toLowerCase();
+
+        return responsaveis.values().stream()
+                .filter(r -> r.getNome().toLowerCase().contains(procurado))
+                .sorted(Comparator.comparing(Responsavel::getNome).thenComparing(Responsavel::getId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public String sugerirLogin(String nome) {
+        String base = GeradorDeCredenciais.baseDeLogin(nome);
+        String candidato = base;
+        int numero = 2;
+
+        while (pesquisarUsuarioPorLogin(candidato) != null) {
+            candidato = base + numero++;
+        }
+
+        return candidato;
+    }
+
+    @Override
+    public boolean autenticarUsuario(String login, String senha) {
+        Usuario usuario = pesquisarUsuarioPorLogin(login);
+
+        if (usuario == null || !senhaConfere(usuario, senha)) {
+            return false;
+        }
+
+        if (semAcessoProprio(usuario)) {
+            return false;
+        }
+
+        // Código de primeiro acesso vencido: é preciso pedir um novo.
+        return !(usuario.isSenhaProvisoria()
+                && usuario.getProvisoriaValidaAte() != null
+                && LocalDateTime.now(relogio).isAfter(usuario.getProvisoriaValidaAte()));
+    }
+
+    // O código de primeiro acesso aceita letras maiúsculas ou minúsculas e espaços.
+    private boolean senhaConfere(Usuario usuario, String senha) {
+        if (SenhaHasher.verificar(senha, usuario.getSenha())) {
+            return true;
+        }
+
+        return usuario.isSenhaProvisoria()
+                && senha != null
+                && SenhaHasher.verificar(senha.trim().toUpperCase(), usuario.getSenha());
+    }
+
+    // Crianças da Catequese Infantil não têm login: o acesso é dos responsáveis.
+    private boolean semAcessoProprio(Usuario usuario) {
+        return usuario instanceof Catequisando catequisando
+                && catequisando.getTurma() != null
+                && catequisando.getTurma().getTipoTurma() == TipoTurma.CATEQUESE;
     }
 
     private void validarTelefoneEIdade(String telefone, int idade) {
@@ -965,8 +1096,11 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     private void protegerSenha(Usuario usuario) {
         usuario.setSenha(SenhaHasher.gerarHash(usuario.getSenha()));
 
-        // Quem cadastra define a senha, então o usuário precisa trocá-la ao entrar.
+        // A senha é um código de primeiro acesso: o usuário precisa trocá-la ao
+        // entrar, e ela vale por tempo limitado.
         usuario.setSenhaProvisoria(true);
+        usuario.setProvisoriaValidaAte(
+                LocalDateTime.now(relogio).plusDays(VALIDADE_DO_CODIGO_EM_DIAS));
     }
 
     private void validarNovoUsuario(Usuario usuario) {
@@ -1009,6 +1143,21 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         if (usuario.getIdade() <= 0) {
             throw new IllegalArgumentException(
                     "A idade deve ser maior que zero."
+            );
+        }
+
+        String login = usuario.getLogin();
+
+        if (login == null || !LOGIN_VALIDO.matcher(login).matches()) {
+            throw new IllegalArgumentException(
+                    "O nome de usuário deve ter de 3 a 40 caracteres: "
+                            + "letras, números, ponto, hífen ou sublinhado."
+            );
+        }
+
+        if (pesquisarUsuarioPorLogin(login) != null) {
+            throw new IllegalArgumentException(
+                    "Já existe um usuário com esse nome de usuário."
             );
         }
     }
