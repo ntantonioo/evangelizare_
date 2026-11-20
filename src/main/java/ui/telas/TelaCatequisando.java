@@ -1,102 +1,92 @@
 package ui.telas;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import exception.CatequisandoNaoEncontradoException;
 import exception.CatequistaNaoEncontradoException;
-import exception.ResponsavelNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
-
 import model.*;
-import ui.Console;
+import security.GeradorDeCredenciais;
 import service.SistemaEvangelizare;
+import ui.Console;
 
 public class TelaCatequisando {
 
+    // Idade mínima de um responsável (a mesma regra do serviço, aqui só para avisar cedo).
+    private static final int IDADE_MINIMA_RESPONSAVEL = 18;
+
     private final SistemaEvangelizare sistema;
     private final Console console;
+    private final Seletor seletor;
 
     public TelaCatequisando(SistemaEvangelizare sistema, Console console) {
         this.sistema = sistema;
         this.console = console;
+        this.seletor = new Seletor(console);
     }
 
     // CONSULTA DE CATEQUISANDOS
 
     public void consultar(Catequista catequista) {
-
         System.out.println("\n========== CONSULTAR CATEQUISANDOS ==========");
 
         try {
-            List<Turma> turmasDisponiveis =
-                    sistema.pesquisarTurmaPorCatequista(catequista.getId());
+            Turma turma = escolherTurmaDoCatequista(catequista);
 
-            if (turmasDisponiveis.isEmpty()) {
-                System.out.println("Você não possui turmas cadastradas.");
+            if (turma == null) {
                 return;
             }
 
-            System.out.println("\nSuas turmas:");
-
-            for (Turma turma : turmasDisponiveis) {
-                System.out.println(
-                        "ID: " + turma.getIdTurma()
-                                + " | Tipo: " + turma.getTipoTurma()
-                );
-            }
-
-            System.out.println("\nDigite o ID da turma que deseja consultar: ");
-            String idTurma = console.lerTexto().trim();
-
-            boolean turmaPermitida = turmasDisponiveis.stream()
-                    .anyMatch(t -> t.getIdTurma().equals(idTurma));
-
-            if (!turmaPermitida) {
-                System.out.println(
-                        "Você não tem permissão para consultar essa turma."
-                );
-                return;
-            }
-
-            // Busca os catequisandos vinculados à turma escolhida
             List<Catequisando> catequisandos =
-                    sistema.pesquisarCatequisandosPorTurma(idTurma);
+                    sistema.pesquisarCatequisandosPorTurma(turma.getIdTurma());
 
             if (catequisandos.isEmpty()) {
-                System.out.println(
-                        "Nenhum catequisando cadastrado nesta turma."
-                );
+                System.out.println("Nenhum catequisando cadastrado nesta turma.");
                 return;
             }
 
             System.out.println("\nCatequisandos da turma:");
 
             for (Catequisando c : catequisandos) {
-                System.out.println("------------------------------");
-                System.out.println("ID: " + c.getId());
-                System.out.println("Nome: " + c.getNome());
-                System.out.println("Telefone: " + c.getTelefone());
-                System.out.println("Idade: " + c.getIdade());
-                System.out.println("\nResponsáveis:");
-
-                if (c.getResponsaveis().isEmpty()) {
-                    System.out.println("Nenhum responsável cadastrado.");
-                } else {
-                    for (VinculoResponsavel vinculo : c.getVinculos()) {
-                        Responsavel responsavel = vinculo.getResponsavel();
-
-                        System.out.println("------------------------------");
-                        System.out.println("ID: " + responsavel.getId());
-                        System.out.println("Nome: " + responsavel.getNome());
-                        System.out.println("Telefone: " + responsavel.getTelefone());
-                        System.out.println("Parentesco: " + vinculo.getParentesco());
-                    }
-                }
+                exibir(c);
             }
 
         } catch (CatequistaNaoEncontradoException e) {
             System.out.println("Erro: " + e.getMessage());
+        }
+    }
+
+    private void exibir(Catequisando c) {
+        System.out.println("------------------------------");
+        System.out.println("Nome: " + c.getNome());
+        System.out.println("Telefone: " + c.getTelefone());
+        System.out.println("Idade: " + c.getIdade());
+        System.out.println(
+                "Acesso: " + (temAcessoProprio(c.getTurma())
+                        ? "usuário " + c.getLogin()
+                        : "sem acesso próprio (acompanhado pelos responsáveis)")
+        );
+        System.out.println("\nResponsáveis:");
+
+        if (c.getVinculos().isEmpty()) {
+            System.out.println("Nenhum responsável cadastrado.");
+            return;
+        }
+
+        for (VinculoResponsavel vinculo : c.getVinculos()) {
+            Responsavel responsavel = vinculo.getResponsavel();
+
+            System.out.println(
+                    "- " + responsavel.getNome()
+                            + " | " + vinculo.getParentesco()
+                            + " | " + responsavel.getTelefone()
+                            + " | usuário " + responsavel.getLogin()
+            );
         }
     }
 
@@ -120,7 +110,7 @@ public class TelaCatequisando {
         for (Catequista catequista : turma.getCatequistas()) {
             System.out.println(
                     "- " + catequista.getNome()
-                            + " (ID: " + catequista.getId() + ")"
+                            + " (" + catequista.getTelefone() + ")"
             );
         }
     }
@@ -128,94 +118,68 @@ public class TelaCatequisando {
     // CADASTRO DE CATEQUISANDO
 
     public void cadastrar(Catequista catequista) {
-
         System.out.println("\n========== CADASTRO DE CATEQUISANDO ==========");
 
         try {
-            List<Turma> turmasDisponiveis = sistema.pesquisarTurmaPorCatequista(catequista.getId());
+            Turma turma = escolherTurmaDoCatequista(catequista);
 
-            if (turmasDisponiveis.isEmpty()) {
-                System.out.println("Você ainda não possui turmas cadastradas.");
+            if (turma == null) {
                 return;
             }
 
-            System.out.println("\nTurmas disponíveis:");
-
-            for (Turma turma : turmasDisponiveis) {
-                System.out.println(
-                        "ID: " + turma.getIdTurma()
-                                + " | Tipo: " + turma.getTipoTurma()
-                );
-            }
-
-            System.out.println("\nDigite o ID do catequisando: ");
-            String id = console.lerTexto();
-
-            System.out.println("Digite o nome do catequisando: ");
+            System.out.println("Nome do catequisando: ");
             String nome = console.lerTexto();
 
-            System.out.println("Digite o telefone do catequisando: ");
+            System.out.println("Telefone do catequisando: ");
             String telefone = console.lerTexto();
 
-            System.out.println("Digite a idade: ");
+            System.out.println("Idade: ");
             int idade = console.lerInt();
 
-            System.out.println("Digite a senha: ");
-            String senha = console.lerSenha();
+            Set<String> loginsReservados = new HashSet<>();
+            String login = lerLogin(nome, loginsReservados);
 
-            System.out.println("Digite o ID da turma: ");
-            String idTurma = console.lerTexto().trim();
+            // Criança da Catequese Infantil não entra no sistema: o código é gerado
+            // só para cumprir o cadastro e ninguém o vê. Os demais recebem o código
+            // de primeiro acesso, mostrado ao final.
+            String codigo = GeradorDeCredenciais.novoCodigo();
 
-            Turma turmaSelecionada = null;
-
-            for (Turma turma : turmasDisponiveis) {
-                if (turma.getIdTurma().equals(idTurma)) {
-                    turmaSelecionada = turma;
-                    break;
-                }
-            }
-
-            if (turmaSelecionada == null) {
-                System.out.println(
-                        "A turma informada não pertence a você."
-                );
-                return;
-            }
-
-            Catequisando novoCatequisando = new Catequisando(
-                    id,
-                    nome,
-                    telefone,
-                    idade,
-                    senha,
-                    turmaSelecionada
+            Catequisando novo = new Catequisando(
+                    GeradorDeCredenciais.novoId(), nome, telefone, idade, codigo, turma
             );
+            novo.setLogin(login);
 
-            TipoTurma tipo = turmaSelecionada.getTipoTurma();
-
+            TipoTurma tipo = turma.getTipoTurma();
             boolean exigeResponsavel =
-                    tipo == TipoTurma.CATEQUESE
-                            || tipo == TipoTurma.CRISMA_JOVEM;
+                    tipo == TipoTurma.CATEQUESE || tipo == TipoTurma.CRISMA_JOVEM;
 
-            // Responsáveis: contas já existentes (pelo ID) ou novas
-            for (VinculoResponsavel vinculo : lerResponsaveis(exigeResponsavel)) {
-                novoCatequisando.adicionarResponsavel(
-                        vinculo.getResponsavel(),
-                        vinculo.getParentesco()
+            Map<String, String> codigosDosNovos = new LinkedHashMap<>();
+            List<VinculoResponsavel> vinculos =
+                    lerResponsaveis(exigeResponsavel, codigosDosNovos, loginsReservados);
+
+            for (VinculoResponsavel vinculo : vinculos) {
+                novo.adicionarResponsavel(vinculo.getResponsavel(), vinculo.getParentesco());
+            }
+
+            sistema.cadastrarCatequisando(novo);
+
+            System.out.println("\nCatequisando cadastrado com sucesso!");
+
+            if (temAcessoProprio(turma)) {
+                Credenciais.exibir(novo.getNome(), login, codigo);
+            } else {
+                System.out.println(
+                        "Esta criança não tem acesso próprio: quem acompanha é o responsável."
                 );
             }
 
-            sistema.cadastrarCatequisando(novoCatequisando);
-
-            System.out.println(
-                    "\nCatequisando cadastrado com sucesso!"
-            );
+            exibirAcessosNovos(vinculos, codigosDosNovos);
 
         } catch (CatequistaNaoEncontradoException | TurmaNaoEncontradaException e) {
 
             System.out.println(e.getMessage());
 
-        }  catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             System.out.println("Não foi possível cadastrar: " + e.getMessage());
         }
     }
@@ -223,90 +187,24 @@ public class TelaCatequisando {
     // EDITAR CATEQUISANDO
 
     public void editar(Catequista catequista) {
-
         System.out.println("\n========== EDITAR CATEQUISANDO ==========");
 
         try {
-            // Busca somente as turmas do catequista logado.
-            List<Turma> turmasDisponiveis =
-                    sistema.pesquisarTurmaPorCatequista(catequista.getId());
-
-            if (turmasDisponiveis.isEmpty()) {
-                System.out.println("Você não possui turmas cadastradas.");
-                return;
-            }
-
-            System.out.println("\nSuas turmas:");
-
-            for (Turma turma : turmasDisponiveis) {
-                System.out.println(
-                        "ID: " + turma.getIdTurma()
-                                + " | Tipo: " + turma.getTipoTurma()
-                );
-            }
-
-            System.out.print("\nDigite o ID da turma: ");
-            String idTurma = console.lerTexto().trim();
-
-            boolean turmaPermitida = turmasDisponiveis.stream()
-                    .anyMatch(t -> t.getIdTurma().equals(idTurma));
-
-            if (!turmaPermitida) {
-                System.out.println(
-                        "Você não tem permissão para editar catequisandos desta turma."
-                );
-                return;
-            }
-
-            List<Catequisando> catequisandos =
-                    sistema.pesquisarCatequisandosPorTurma(idTurma);
-
-            if (catequisandos.isEmpty()) {
-                System.out.println("Esta turma não possui catequisandos.");
-                return;
-            }
-
-            System.out.println("\nCatequisandos da turma:");
-
-            for (Catequisando c : catequisandos) {
-                System.out.println(
-                        "ID: " + c.getId() + " | Nome: " + c.getNome()
-                );
-            }
-
-            System.out.print(
-                    "\nDigite o ID do catequisando que deseja editar: "
-            );
-            String idCatequisando = console.lerTexto().trim();
-
-            // Localiza o catequisando somente na turma autorizada.
-            Catequisando selecionado = null;
-
-            for (Catequisando c : catequisandos) {
-                if (c.getId().equals(idCatequisando)) {
-                    selecionado = c;
-                    break;
-                }
-            }
+            Catequisando selecionado = escolherCatequisando(catequista);
 
             if (selecionado == null) {
-                System.out.println(
-                        "Catequisando não encontrado nesta turma."
-                );
                 return;
             }
 
             System.out.println("\nCatequisando: " + selecionado.getNome());
 
             System.out.print(
-                    "Novo telefone (atual: "
-                            + selecionado.getTelefone() + "): "
+                    "Novo telefone (atual: " + selecionado.getTelefone() + "): "
             );
             String telefone = console.lerTexto().trim();
 
             System.out.print(
-                    "Nova idade (atual: "
-                            + selecionado.getIdade() + "): "
+                    "Nova idade (atual: " + selecionado.getIdade() + "): "
             );
             int idade = console.lerInt();
 
@@ -318,26 +216,27 @@ public class TelaCatequisando {
             TipoTurma tipo = selecionado.getTurma().getTipoTurma();
 
             boolean exigeResponsavel =
-                    tipo == TipoTurma.CATEQUESE
-                            || tipo == TipoTurma.CRISMA_JOVEM;
+                    tipo == TipoTurma.CATEQUESE || tipo == TipoTurma.CRISMA_JOVEM;
 
-            List<VinculoResponsavel> vinculos = lerResponsaveis(exigeResponsavel);
+            Map<String, String> codigosDosNovos = new LinkedHashMap<>();
+            List<VinculoResponsavel> vinculos =
+                    lerResponsaveis(exigeResponsavel, codigosDosNovos, new HashSet<>());
 
             if (vinculos.isEmpty() && exigeResponsavel) {
-                System.out.println(
-                        "Esta turma exige pelo menos um responsável."
-                );
+                System.out.println("Esta turma exige pelo menos um responsável.");
                 return;
             }
 
             sistema.atualizarCatequisando(
-                    idCatequisando,
+                    selecionado.getId(),
                     telefone,
                     idade,
                     vinculos
             );
 
             System.out.println("\nDados atualizados com sucesso!");
+
+            exibirAcessosNovos(vinculos, codigosDosNovos);
 
         } catch (CatequistaNaoEncontradoException
                  | CatequisandoNaoEncontradoException e) {
@@ -354,85 +253,32 @@ public class TelaCatequisando {
     // REMOVER CATEQUISANDO
 
     public void remover(Catequista catequista) {
+        System.out.println("\n========== REMOVER CATEQUISANDO ==========");
+
         try {
-            // busca as turmas do catequista
-            List<Turma> turmasDisponiveis =
-                    sistema.pesquisarTurmaPorCatequista(catequista.getId());
+            Catequisando selecionado = escolherCatequisando(catequista);
 
-            if (turmasDisponiveis.isEmpty()) {
-                System.out.println("Você não possui turmas cadastradas.");
+            if (selecionado == null) {
                 return;
             }
 
-            System.out.println("\n========== REMOVER CATEQUISANDO ==========");
-            System.out.println("Suas turmas");
-
-            for (Turma turma : turmasDisponiveis) {
-                System.out.println(
-                        "ID: " + turma.getIdTurma()
-                );
-            }
-
-            System.out.println("\nInforme o ID da turma: ");
-            String idTurma = console.lerTexto().trim();
-
-            boolean turmaPermitida = turmasDisponiveis.stream()
-                    .anyMatch(t -> t.getIdTurma().equals(idTurma));
-
-            if (!turmaPermitida) {
-                System.out.println("Você não tem acesso a essa turma.");
-                return;
-            }
-
-            // listar catequisandos da turma
-            List<Catequisando> catequisandos =
-                    sistema.pesquisarCatequisandosPorTurma(idTurma);
-
-            if (catequisandos.isEmpty()) {
-                System.out.println("Não há catequisandos nesta turma.");
-                return;
-            }
-
-            System.out.println("\nCatequisandos disponíveis:");
-
-            for (Catequisando c : catequisandos) {
-                System.out.println(
-                        "ID: " + c.getId()
-                                + " | Nome: " + c.getNome()
-                );
-            }
-
-            System.out.println("\nInforme o ID do catequisando: ");
-            String idCatequisando = console.lerTexto().trim();
-
-            boolean catequisandoEncontrado = catequisandos.stream()
-                    .anyMatch(c -> c.getId().equals(idCatequisando));
-
-            if (!catequisandoEncontrado) {
-                System.out.println(
-                        "Catequisando não encontrado nesta turma."
-                );
-                return;
-            }
-
-            // confirmação de remoção
             System.out.println(
-                    "Deseja realmente remover este catequisando? (S/N): "
+                    "Deseja realmente remover " + selecionado.getNome() + "? (S/N): "
             );
-            String confirmacao = console.lerTexto().trim();
 
-            if (!confirmacao.equalsIgnoreCase("S")) {
+            if (!lerSimNao()) {
                 System.out.println("Remoção cancelada");
                 return;
             }
 
-            sistema.removerCatequisando(idCatequisando);
+            sistema.removerCatequisando(selecionado.getId());
 
             System.out.println("Catequisando removido com sucesso!");
 
-        } catch (CatequisandoNaoEncontradoException e) {
-            System.out.println(e.getMessage());
-        } catch (IllegalArgumentException e) {
+        } catch (CatequistaNaoEncontradoException
+                 | CatequisandoNaoEncontradoException
+                 | IllegalArgumentException e) {
+
             System.out.println(e.getMessage());
         }
     }
@@ -440,24 +286,40 @@ public class TelaCatequisando {
     // TRANSFERIR CATEQUISANDO
 
     public void transferir() {
-
         System.out.println("\n========== TRANSFERIR CATEQUISANDO ==========");
 
+        Catequisando catequisando = seletor.buscarEEscolher(
+                "catequisando",
+                sistema::pesquisarCatequisandoPorNome,
+                c -> c.getNome() + " | turma " + c.getTurma().getIdTurma()
+        );
+
+        if (catequisando == null) {
+            System.out.println("Transferência cancelada.");
+            return;
+        }
+
+        Turma novaTurma = seletor.escolherTurma(sistema, "Turma de destino");
+
+        if (novaTurma == null) {
+            System.out.println("Transferência cancelada.");
+            return;
+        }
+
+        boolean ganhaAcesso = !temAcessoProprio(catequisando.getTurma())
+                && temAcessoProprio(novaTurma);
+
         try {
-            System.out.println("Informe o ID do catequisando: ");
-            String idCatequisando = console.lerTexto();
+            sistema.transferirCatequisando(catequisando.getId(), novaTurma.getIdTurma());
 
-            System.out.println("Informe o ID da nova Turma: ");
-            String idNovaTurma = console.lerTexto();
+            System.out.println("Catequisando transferido com sucesso!");
 
-            sistema.transferirCatequisando(
-                    idCatequisando,
-                    idNovaTurma
-            );
-
-            System.out.println(
-                    "Catequisando transferido com sucesso!"
-            );
+            if (ganhaAcesso) {
+                System.out.println(
+                        catequisando.getNome() + " agora pode ter acesso próprio. Para gerar o código "
+                                + "de primeiro acesso, use \"Redefinir senha de usuário\"."
+                );
+            }
 
         } catch (CatequisandoNaoEncontradoException
                  | TurmaNaoEncontradaException
@@ -468,11 +330,60 @@ public class TelaCatequisando {
         }
     }
 
+    // ESCOLHAS
+
+    private Turma escolherTurmaDoCatequista(Catequista catequista) {
+        List<Turma> turmas = sistema.pesquisarTurmaPorCatequista(catequista.getId());
+
+        if (turmas.isEmpty()) {
+            System.out.println("Você não possui turmas cadastradas.");
+            return null;
+        }
+
+        return seletor.escolher(
+                "Suas turmas",
+                turmas,
+                t -> t.getIdTurma() + " | " + t.getTipoTurma()
+        );
+    }
+
+    private Catequisando escolherCatequisando(Catequista catequista) {
+        Turma turma = escolherTurmaDoCatequista(catequista);
+
+        if (turma == null) {
+            return null;
+        }
+
+        List<Catequisando> catequisandos =
+                sistema.pesquisarCatequisandosPorTurma(turma.getIdTurma());
+
+        if (catequisandos.isEmpty()) {
+            System.out.println("Esta turma não possui catequisandos.");
+            return null;
+        }
+
+        return seletor.escolher(
+                "Catequisandos da turma",
+                catequisandos,
+                c -> c.getNome() + " | " + c.getTelefone()
+        );
+    }
+
+    // Só a Catequese Infantil fica sem acesso próprio: o acesso é dos responsáveis.
+    private boolean temAcessoProprio(Turma turma) {
+        return turma != null && turma.getTipoTurma() != TipoTurma.CATEQUESE;
+    }
+
     // RESPONSÁVEIS (usados no cadastro e na edição de catequisandos)
 
     // Lê os responsáveis do catequisando. Cada um pode ser uma conta que já
-    // existe (informando o ID) ou uma conta nova, cadastrada junto.
-    private List<VinculoResponsavel> lerResponsaveis(boolean obrigatorio) {
+    // existe (escolhida pelo nome) ou uma conta nova, cadastrada junto. Os códigos
+    // de primeiro acesso dos novos ficam em "codigosDosNovos" (ID -> código).
+    private List<VinculoResponsavel> lerResponsaveis(
+            boolean obrigatorio,
+            Map<String, String> codigosDosNovos,
+            Set<String> loginsReservados) {
+
         List<VinculoResponsavel> vinculos = new ArrayList<>();
 
         boolean adicionar = true;
@@ -485,13 +396,20 @@ public class TelaCatequisando {
 
         while (adicionar) {
             System.out.println("\n--- RESPONSÁVEL ---");
-            System.out.println(
-                    "ID do responsável (deixe em branco para cadastrar um novo): "
-            );
-            String id = console.lerTexto().trim();
+            System.out.println("1 - Escolher um responsável já cadastrado");
+            System.out.println("2 - Cadastrar um novo responsável");
+            System.out.print("Escolha uma opção: ");
 
-            Responsavel responsavel =
-                    id.isEmpty() ? lerNovoResponsavel() : buscarResponsavel(id);
+            int opcao = console.lerInt();
+            Responsavel responsavel = null;
+
+            if (opcao == 1) {
+                responsavel = escolherResponsavelExistente();
+            } else if (opcao == 2) {
+                responsavel = lerNovoResponsavel(codigosDosNovos, loginsReservados);
+            } else {
+                System.out.println("Opção inválida.");
+            }
 
             if (responsavel != null) {
                 adicionarVinculo(vinculos, responsavel);
@@ -525,36 +443,24 @@ public class TelaCatequisando {
         }
     }
 
-    private Responsavel buscarResponsavel(String id) {
-        try {
-            Responsavel responsavel = sistema.pesquisarResponsavelPorId(id);
+    private Responsavel escolherResponsavelExistente() {
+        Responsavel responsavel = seletor.buscarEEscolher(
+                "responsável",
+                sistema::pesquisarResponsavelPorNome,
+                r -> r.getNome() + " | " + r.getTelefone() + " | usuário: " + r.getLogin()
+        );
 
-            System.out.println("Responsável encontrado: " + responsavel.getNome());
-
-            return responsavel;
-
-        } catch (ResponsavelNaoEncontradoException e) {
-            System.out.println(
-                    e.getMessage()
-                            + ". Para cadastrar um novo, deixe o ID em branco."
-            );
-            return null;
+        if (responsavel != null) {
+            System.out.println("Responsável escolhido: " + responsavel.getNome());
         }
+
+        return responsavel;
     }
 
-    private Responsavel lerNovoResponsavel() {
-        System.out.println("Novo responsável (ele poderá entrar no sistema com este ID).");
+    private Responsavel lerNovoResponsavel(
+            Map<String, String> codigosDosNovos, Set<String> loginsReservados) {
 
-        System.out.println("ID de acesso: ");
-        String id = console.lerTexto().trim();
-
-        if (sistema.pesquisarUsuarioPorId(id) != null) {
-            System.out.println(
-                    "Já existe um usuário com esse ID. Se ele já é um responsável "
-                            + "cadastrado, informe o ID dele na pergunta anterior."
-            );
-            return null;
-        }
+        System.out.println("Novo responsável (ele poderá entrar no sistema).");
 
         System.out.println("Nome: ");
         String nome = console.lerTexto();
@@ -565,24 +471,66 @@ public class TelaCatequisando {
         System.out.println("Idade: ");
         int idade = console.lerInt();
 
-        System.out.println("Senha inicial: ");
-        String senha = console.lerSenha();
-
-        System.out.println("Confirme a senha: ");
-        String confirmacao = console.lerSenha();
-
-        if (!senha.equals(confirmacao)) {
-            System.out.println("As senhas não conferem. Responsável não adicionado.");
+        if (idade < IDADE_MINIMA_RESPONSAVEL) {
+            System.out.println("O responsável precisa ser maior de idade. Responsável não adicionado.");
             return null;
         }
 
+        String login = lerLogin(nome, loginsReservados);
+        String codigo = GeradorDeCredenciais.novoCodigo();
+
         try {
-            return new Responsavel(id, nome, telefone, idade, senha);
+            Responsavel responsavel = new Responsavel(
+                    GeradorDeCredenciais.novoId(), nome, telefone, idade, codigo
+            );
+            responsavel.setLogin(login);
+
+            codigosDosNovos.put(responsavel.getId(), codigo);
+
+            return responsavel;
 
         } catch (IllegalArgumentException e) {
             System.out.println("Não foi possível adicionar: " + e.getMessage());
             return null;
         }
+    }
+
+    // Depois que o cadastro deu certo, mostra o acesso de cada responsável novo.
+    private void exibirAcessosNovos(
+            List<VinculoResponsavel> vinculos, Map<String, String> codigosDosNovos) {
+
+        for (VinculoResponsavel vinculo : vinculos) {
+            String codigo = codigosDosNovos.get(vinculo.getResponsavel().getId());
+
+            if (codigo != null) {
+                Credenciais.exibir(
+                        vinculo.getResponsavel().getNome(),
+                        vinculo.getResponsavel().getLogin(),
+                        codigo
+                );
+            }
+        }
+    }
+
+    // Sugere um nome de usuário livre e deixa a pessoa aceitar ou digitar outro.
+    // "reservados" guarda os logins já escolhidos neste mesmo formulário.
+    private String lerLogin(String nome, Set<String> reservados) {
+        String base = GeradorDeCredenciais.baseDeLogin(nome);
+        String sugestao = base;
+        int numero = 2;
+
+        while (sistema.pesquisarUsuarioPorLogin(sugestao) != null
+                || reservados.contains(sugestao.toLowerCase())) {
+            sugestao = base + numero++;
+        }
+
+        System.out.println("Nome de usuário [" + sugestao + "] (Enter para aceitar): ");
+        String digitado = console.lerTexto().trim();
+        String escolhido = digitado.isEmpty() ? sugestao : digitado;
+
+        reservados.add(escolhido.toLowerCase());
+
+        return escolhido;
     }
 
     private boolean lerSimNao() {

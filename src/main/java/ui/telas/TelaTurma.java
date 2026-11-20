@@ -6,17 +6,19 @@ import exception.CatequistaNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 
 import model.*;
-import service.SistemaEvangelizare;
 import ui.Console;
+import service.SistemaEvangelizare;
 
 public class TelaTurma {
 
     private final SistemaEvangelizare sistema;
     private final Console console;
+    private final Seletor seletor;
 
     public TelaTurma(SistemaEvangelizare sistema, Console console) {
         this.sistema = sistema;
         this.console = console;
+        this.seletor = new Seletor(console);
     }
 
     // CADASTRO DE TURMA
@@ -54,13 +56,14 @@ public class TelaTurma {
         System.out.print("Digite o ID da turma: ");
         String idTurma = console.lerTexto().trim();
 
-        System.out.print("Digite o ID do primeiro catequista: ");
-        String primeiroCatequistaId = console.lerTexto().trim();
+        Catequista primeiroCatequista = escolherCatequista("primeiro catequista");
+
+        if (primeiroCatequista == null) {
+            System.out.println("Cadastro cancelado.");
+            return;
+        }
 
         try {
-            Catequista primeiroCatequista =
-                    sistema.pesquisarCatequistaPorId(primeiroCatequistaId);
-
             Turma turma = new Turma(
                     idTurma,
                     tipoTurma,
@@ -79,13 +82,12 @@ public class TelaTurma {
                 }
 
                 if (resposta.equalsIgnoreCase("S")) {
-                    System.out.print("Digite o ID do segundo catequista: ");
-                    String segundoCatequistaId = console.lerTexto().trim();
+                    Catequista segundoCatequista = escolherCatequista("segundo catequista");
 
-                    Catequista segundoCatequista =
-                            sistema.pesquisarCatequistaPorId(segundoCatequistaId);
+                    if (segundoCatequista != null) {
+                        turma.adicionarCatequista(segundoCatequista);
+                    }
 
-                    turma.adicionarCatequista(segundoCatequista);
                     break;
                 }
 
@@ -102,7 +104,7 @@ public class TelaTurma {
             for (Catequista catequista : turma.getCatequistas()) {
                 System.out.println(
                         "- " + catequista.getNome()
-                                + " (ID: " + catequista.getId() + ")"
+                                + " (" + catequista.getTelefone() + ")"
                 );
             }
 
@@ -146,7 +148,7 @@ public class TelaTurma {
         for (Catequista catequista : turmaAtual.getCatequistas()) {
             System.out.println(
                     "- " + catequista.getNome()
-                            + " (ID: " + catequista.getId() + ")"
+                            + " (" + catequista.getTelefone() + ")"
             );
         }
 
@@ -206,11 +208,12 @@ public class TelaTurma {
                     break;
 
                 case "2":
-                    System.out.println("Digite o ID do primeiro catequista: ");
-                    String idPrimeiro = console.lerTexto().trim();
+                    Catequista primeiroCatequista = escolherCatequista("primeiro catequista");
 
-                    Catequista primeiroCatequista =
-                            sistema.pesquisarCatequistaPorId(idPrimeiro);
+                    if (primeiroCatequista == null) {
+                        System.out.println("Edição cancelada.");
+                        return;
+                    }
 
                     turmaAtualizada = new Turma(
                             idTurma,
@@ -236,13 +239,12 @@ public class TelaTurma {
                 }
 
                 if (resposta.equalsIgnoreCase("S")) {
-                    System.out.print("Digite o ID do segundo catequista: ");
-                    String idSegundo = console.lerTexto().trim();
+                    Catequista segundoCatequista = escolherCatequista("segundo catequista");
 
-                    Catequista segundoCatequista =
-                            sistema.pesquisarCatequistaPorId(idSegundo);
+                    if (segundoCatequista != null) {
+                        turmaAtualizada.adicionarCatequista(segundoCatequista);
+                    }
 
-                    turmaAtualizada.adicionarCatequista(segundoCatequista);
                     break;
                 }
 
@@ -259,7 +261,7 @@ public class TelaTurma {
             for (Catequista catequista : turmaAtualizada.getCatequistas()) {
                 System.out.println(
                         "- " + catequista.getNome()
-                                + " (ID: " + catequista.getId() + ")"
+                                + " (" + catequista.getTelefone() + ")"
                 );
             }
 
@@ -270,5 +272,14 @@ public class TelaTurma {
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    // Escolhe um catequista pelo nome, em vez de digitar o ID dele.
+    private Catequista escolherCatequista(String titulo) {
+        return seletor.buscarEEscolher(
+                titulo,
+                sistema::pesquisarCatequistaPorNome,
+                c -> c.getNome() + " | " + c.getTelefone()
+        );
     }
 }

@@ -4,17 +4,20 @@ import exception.CatequistaNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 
 import model.*;
-import ui.Console;
+import security.GeradorDeCredenciais;
 import service.SistemaEvangelizare;
+import ui.Console;
 
 public class TelaCatequista {
 
     private final SistemaEvangelizare sistema;
     private final Console console;
+    private final Seletor seletor;
 
     public TelaCatequista(SistemaEvangelizare sistema, Console console) {
         this.sistema = sistema;
         this.console = console;
+        this.seletor = new Seletor(console);
     }
 
     // CADASTRO DE USUÁRIO
@@ -58,9 +61,6 @@ public class TelaCatequista {
     private void cadastrarCatequista() {
         System.out.println("\n========== CADASTRO DO CATEQUISTA ==========");
 
-        System.out.println("ID do catequista: ");
-        String idCatequista = console.lerTexto();
-
         System.out.println("Nome: ");
         String nome = console.lerTexto();
 
@@ -70,28 +70,25 @@ public class TelaCatequista {
         System.out.println("Idade: ");
         int idade = console.lerInt();
 
-        System.out.println("Senha: ");
-        String senha = console.lerSenha();
-
         System.out.println("Ano de ingresso na catequese: ");
         String anoIngresso = console.lerTexto();
 
-        Catequista catequista = new Catequista(
-                idCatequista,
-                nome,
-                telefone,
-                idade,
-                senha,
-                anoIngresso
-        );
+        String login = lerLogin(nome);
+        String codigo = GeradorDeCredenciais.novoCodigo();
 
         try {
+            Catequista catequista = new Catequista(
+                    GeradorDeCredenciais.novoId(), nome, telefone, idade, codigo, anoIngresso
+            );
+            catequista.setLogin(login);
+
             sistema.cadastrarCatequista(catequista);
 
             System.out.println("\nCatequista cadastrado com sucesso!");
+            Credenciais.exibir(catequista.getNome(), login, codigo);
 
         } catch (IllegalArgumentException e) {
-            System.out.println("\nNao foi possível cadastrar: " + e.getMessage());
+            System.out.println("\nNão foi possível cadastrar: " + e.getMessage());
         }
     }
 
@@ -99,9 +96,6 @@ public class TelaCatequista {
 
     private void cadastrarAdministrador() {
         System.out.println("\n========== CADASTRO DO ADMINISTRADOR ==========");
-
-        System.out.println("ID do administrador: ");
-        String id = console.lerTexto().trim();
 
         System.out.println("Nome: ");
         String nome = console.lerTexto().trim();
@@ -112,27 +106,33 @@ public class TelaCatequista {
         System.out.println("Idade: ");
         int idade = console.lerInt();
 
-        System.out.println("Senha: ");
-        String senha = console.lerSenha();
-
-        System.out.println("Confirme a senha: ");
-        String confirmacao = console.lerSenha();
-
-        if (!senha.equals(confirmacao)) {
-            System.out.println("\nAs senhas não conferem. Cadastro cancelado.");
-            return;
-        }
+        String login = lerLogin(nome);
+        String codigo = GeradorDeCredenciais.novoCodigo();
 
         try {
-            sistema.cadastrarAdministrador(
-                    new Administrador(id, nome, telefone, idade, senha)
+            Administrador administrador = new Administrador(
+                    GeradorDeCredenciais.novoId(), nome, telefone, idade, codigo
             );
+            administrador.setLogin(login);
+
+            sistema.cadastrarAdministrador(administrador);
 
             System.out.println("\nAdministrador cadastrado com sucesso!");
+            Credenciais.exibir(nome, login, codigo);
 
         } catch (IllegalArgumentException e) {
             System.out.println("\nNão foi possível cadastrar: " + e.getMessage());
         }
+    }
+
+    // Sugere o nome de usuário e deixa a pessoa aceitar ou digitar outro.
+    private String lerLogin(String nome) {
+        String sugestao = sistema.sugerirLogin(nome);
+
+        System.out.println("Nome de usuário [" + sugestao + "] (Enter para aceitar): ");
+        String digitado = console.lerTexto().trim();
+
+        return digitado.isEmpty() ? sugestao : digitado;
     }
 
     // EDITAR CATEQUISTA
@@ -140,13 +140,19 @@ public class TelaCatequista {
     public void editar() {
         System.out.println("\n========== EDITAR CATEQUISTA ==========");
 
-        System.out.println("ID do catequista: ");
-        String id = console.lerTexto().trim();
+        Catequista catequista = seletor.buscarEEscolher(
+                "catequista",
+                sistema::pesquisarCatequistaPorNome,
+                c -> c.getNome() + " | " + c.getTelefone() + " | usuário: " + c.getLogin()
+        );
+
+        if (catequista == null) {
+            System.out.println("Edição cancelada.");
+            return;
+        }
 
         try {
-            Catequista catequista = sistema.pesquisarCatequistaPorId(id);
-
-            System.out.println("\nCatequista encontrado: " + catequista.getNome());
+            System.out.println("\nCatequista: " + catequista.getNome());
             System.out.println("Telefone atual: " + catequista.getTelefone());
             System.out.println("Idade atual: " + catequista.getIdade());
             System.out.println("Ano de ingresso atual: " + catequista.getAnoDeIngresso());
@@ -161,7 +167,7 @@ public class TelaCatequista {
             String anoDeIngresso = console.lerTexto().trim();
 
             sistema.atualizarCatequista(
-                    id,
+                    catequista.getId(),
                     telefone,
                     idade,
                     anoDeIngresso
@@ -179,20 +185,28 @@ public class TelaCatequista {
     // TRANSFERIR CATEQUISTA
 
     public void transferir() {
-
         System.out.println("\n========== TRANSFERIR CATEQUISTA ==========");
 
+        Catequista catequista = seletor.buscarEEscolher(
+                "catequista",
+                sistema::pesquisarCatequistaPorNome,
+                c -> c.getNome() + " | " + c.getTelefone()
+        );
+
+        if (catequista == null) {
+            System.out.println("Transferência cancelada.");
+            return;
+        }
+
+        Turma novaTurma = seletor.escolherTurma(sistema, "Turma de destino");
+
+        if (novaTurma == null) {
+            System.out.println("Transferência cancelada.");
+            return;
+        }
+
         try {
-            System.out.println("Informe o ID do catequista: ");
-            String idCatequista = console.lerTexto();
-
-            System.out.println("Informe o ID da nova turma: ");
-            String idNovaTurma = console.lerTexto();
-
-            sistema.transferirCatequista(
-                    idCatequista,
-                    idNovaTurma
-            );
+            sistema.transferirCatequista(catequista.getId(), novaTurma.getIdTurma());
 
             System.out.println("Catequista transferido com sucesso!");
 

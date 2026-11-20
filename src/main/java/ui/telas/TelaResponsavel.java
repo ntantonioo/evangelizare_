@@ -31,7 +31,7 @@ public class TelaResponsavel {
             Turma turma = filho.getTurma();
 
             System.out.println("------------------------------");
-            System.out.println("Nome: " + filho.getNome() + " (ID: " + filho.getId() + ")");
+            System.out.println("Nome: " + filho.getNome());
             System.out.println("Parentesco: " + filho.getParentescoDe(responsavel.getId()));
             System.out.println(
                     "Turma: " + turma.getIdTurma() + " | " + turma.getTipoTurma()

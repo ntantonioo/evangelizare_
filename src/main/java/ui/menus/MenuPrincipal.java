@@ -4,6 +4,7 @@ import model.*;
 import service.SistemaEvangelizare;
 import ui.Console;
 import ui.telas.TelaSenha;
+import security.GeradorDeCredenciais;
 import security.PoliticaDeSenha;
 
 public class MenuPrincipal {
@@ -16,9 +17,7 @@ public class MenuPrincipal {
     private final MenuResponsavel menuResponsavel;
     private final TelaSenha telaSenha;
 
-    public MenuPrincipal(SistemaEvangelizare sistema, Console console, MenuAdministrador
-                                 menuAdministrador, MenuCatequista menuCatequista, MenuCatequisando menuCatequisando,
-                         MenuResponsavel menuResponsavel, TelaSenha telaSenha) {
+    public MenuPrincipal(SistemaEvangelizare sistema, Console console, MenuAdministrador menuAdministrador, MenuCatequista menuCatequista, MenuCatequisando menuCatequisando, MenuResponsavel menuResponsavel, TelaSenha telaSenha) {
         this.sistema = sistema;
         this.console = console;
         this.menuAdministrador = menuAdministrador;
@@ -37,6 +36,7 @@ public class MenuPrincipal {
         System.out.println("================================");
         System.out.println("Bem-vindo ao Evangelizare!");
 
+        // Sem administrador não há como cadastrar ninguém: cria o primeiro.
         if (!sistema.existeAdministrador() && !configurarPrimeiroAcesso()) {
             System.out.println(
                     "\nÉ preciso criar o administrador para usar o sistema. Encerrando."
@@ -76,19 +76,19 @@ public class MenuPrincipal {
 
         System.out.println("\n========== LOGIN ==========");
 
-        System.out.print("ID do usuário: ");
-        String id = console.lerTexto();
+        System.out.print("Usuário: ");
+        String login = console.lerTexto();
 
         System.out.print("Senha: ");
-        String senha = console.lerTexto();
+        String senha = console.lerSenha();
 
-        if (sistema.autenticarUsuario(id, senha)) {
-            Usuario usuario = sistema.pesquisarUsuarioPorId(id);
+        if (sistema.autenticarUsuario(login, senha)) {
+            Usuario usuario = sistema.pesquisarUsuarioPorLogin(login);
 
             System.out.println("\nLogin realizado com sucesso!");
             System.out.println("Bem-vindo(a), " + usuario.getNome() + "!");
 
-            // senha definida por outra pessoa: preicsa ser trocada para entrar
+            // Senha definida por outra pessoa: precisa ser trocada para entrar.
             if (usuario.isSenhaProvisoria()
                     && !telaSenha.trocarSenhaProvisoria(usuario, senha)) {
                 return;
@@ -111,33 +111,39 @@ public class MenuPrincipal {
             }
 
         } else {
-            System.out.println("\nID ou senha incorretos.");
+            System.out.println(
+                    "\nUsuário ou senha incorretos. Se for o primeiro acesso, o código pode ter vencido: "
+                            + "peça um novo ao administrador."
+            );
         }
     }
 
     // PRIMEIRO ACESSO
 
+    // Devolve true se o administrador foi criado, ou false se o usuário desistiu.
     private boolean configurarPrimeiroAcesso() {
         System.out.println("\n========== PRIMEIRO ACESSO ==========");
         System.out.println("Ainda não existe um administrador. Crie o primeiro agora.");
         System.out.println(PoliticaDeSenha.DESCRICAO);
 
         while (true) {
-            System.out.println("\nID do administrador (em branco para sair): ");
-            String id = console.lerTexto().trim();
+            System.out.println("\nNome do administrador (em branco para sair): ");
+            String nome = console.lerTexto().trim();
 
-            if (id.isEmpty()) {
+            if (nome.isEmpty()) {
                 return false;
             }
-
-            System.out.println("Nome: ");
-            String nome = console.lerTexto().trim();
 
             System.out.println("Telefone: ");
             String telefone = console.lerTexto().trim();
 
             System.out.println("Idade: ");
             int idade = console.lerInt();
+
+            String sugestao = sistema.sugerirLogin(nome);
+            System.out.println("Nome de usuário [" + sugestao + "] (Enter para aceitar): ");
+            String digitado = console.lerTexto().trim();
+            String login = digitado.isEmpty() ? sugestao : digitado;
 
             System.out.println("Senha: ");
             String senha = console.lerSenha();
@@ -151,12 +157,17 @@ public class MenuPrincipal {
             }
 
             try {
-                sistema.cadastrarAdministradorInicial(
-                        new Administrador(id, nome, telefone, idade, senha)
+                Administrador administrador = new Administrador(
+                        GeradorDeCredenciais.novoId(), nome, telefone, idade, senha
                 );
+                administrador.setLogin(login);
 
-                System.out.println("\nAdministrador criado com sucesso! Entre com o seu ID e a sua senha");
+                sistema.cadastrarAdministradorInicial(administrador);
 
+                System.out.println(
+                        "\nAdministrador criado com sucesso! Entre com o usuário \""
+                                + login + "\" e a sua senha."
+                );
                 return true;
 
             } catch (IllegalArgumentException e) {

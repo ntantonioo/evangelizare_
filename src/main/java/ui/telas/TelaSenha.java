@@ -1,6 +1,7 @@
 package ui.telas;
 
-import model.Usuario;
+import model.*;
+import security.GeradorDeCredenciais;
 import security.PoliticaDeSenha;
 import service.SistemaEvangelizare;
 import ui.Console;
@@ -9,10 +10,12 @@ public class TelaSenha {
 
     private final SistemaEvangelizare sistema;
     private final Console console;
+    private final Seletor seletor;
 
     public TelaSenha(SistemaEvangelizare sistema, Console console) {
         this.sistema = sistema;
         this.console = console;
+        this.seletor = new Seletor(console);
     }
 
     // ALTERAR A PRÓPRIA SENHA
@@ -42,8 +45,13 @@ public class TelaSenha {
 
     // TROCA OBRIGATÓRIA (senha provisória)
 
+    /**
+     * Exige que o usuário defina uma nova senha antes de entrar no sistema.
+     * Devolve true se a senha foi trocada, ou false se ele cancelou.
+     */
     public boolean trocarSenhaProvisoria(Usuario usuario, String senhaAtual) {
-        System.out.println("\nSua senha é provisória. Defina uma nova senha para continuar.");
+        System.out.println("\nEste é o seu primeiro acesso (ou o seu código foi renovado).");
+        System.out.println("Crie a sua senha para continuar.");
 
         while (true) {
             String novaSenha = lerNovaSenhaConfirmada();
@@ -65,33 +73,46 @@ public class TelaSenha {
         }
     }
 
-    // REDEFINIR A SENHA DE OUTRO USUÁRIO (administrador)
+    // GERAR UM NOVO CÓDIGO DE ACESSO PARA OUTRO USUÁRIO (administrador)
 
     public void redefinir(Usuario administrador) {
         System.out.println("\n========== REDEFINIR SENHA DE USUÁRIO ==========");
+        System.out.println("Gera um novo código de primeiro acesso. A pessoa criará uma nova senha.");
 
-        System.out.println("ID do usuário: ");
-        String id = console.lerTexto().trim();
+        Usuario usuario = seletor.buscarEEscolher(
+                "usuário",
+                sistema::pesquisarUsuarioPorNome,
+                u -> u.getNome() + " | " + perfil(u) + " | usuário: " + u.getLogin()
+        );
 
-        System.out.println("Senha provisória (o usuário terá de trocá-la ao entrar): ");
-        String provisoria = console.lerSenha();
-
-        System.out.println("Confirme a senha provisória: ");
-        String confirmacao = console.lerSenha();
-
-        if (!provisoria.equals(confirmacao)) {
-            System.out.println("\nAs senhas não conferem. Operação cancelada.");
+        if (usuario == null) {
+            System.out.println("Operação cancelada.");
             return;
         }
 
-        try {
-            sistema.redefinirSenha(id, provisoria, administrador);
+        String codigo = GeradorDeCredenciais.novoCodigo();
 
-            System.out.println("\nSenha redefinida com sucesso!");
+        try {
+            sistema.redefinirSenha(usuario.getId(), codigo, administrador);
+
+            System.out.println("\nNovo código gerado com sucesso!");
+            Credenciais.exibir(usuario.getNome(), usuario.getLogin(), codigo);
 
         } catch (IllegalArgumentException e) {
             System.out.println("\nNão foi possível redefinir: " + e.getMessage());
         }
+    }
+
+    private static String perfil(Usuario usuario) {
+        if (usuario instanceof Administrador) {
+            return "Administrador";
+        } else if (usuario instanceof Catequista) {
+            return "Catequista";
+        } else if (usuario instanceof Responsavel) {
+            return "Responsável";
+        }
+
+        return "Catequisando";
     }
 
     // Devolve a nova senha confirmada, ou null se o usuário deixou em branco
