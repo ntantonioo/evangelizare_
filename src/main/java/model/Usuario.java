@@ -1,6 +1,8 @@
 
 package model;
 
+import java.time.LocalDateTime;
+
 public abstract class Usuario {
 
     private String id;
@@ -9,6 +11,8 @@ public abstract class Usuario {
     private int idade;
     private String senha;
     private boolean senhaProvisoria;
+    private LocalDateTime provisoriaValidaAte;
+    private String login;
 
     public Usuario(String id, String nome, String telefone,
                    int idade, String senha) {
@@ -17,6 +21,22 @@ public abstract class Usuario {
         this.telefone = telefone;
         this.idade = idade;
         this.senha = senha;
+    }
+
+    public LocalDateTime getProvisoriaValidaAte() {
+        return provisoriaValidaAte;
+    }
+
+    public void setProvisoriaValidaAte(LocalDateTime provisoriaValidaAte) {
+        this.provisoriaValidaAte = provisoriaValidaAte;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login == null ? null : login.trim();
     }
 
     public boolean isSenhaProvisoria() {
