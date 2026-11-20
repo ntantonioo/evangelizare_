@@ -2,15 +2,16 @@ package persistencia;
 
 import java.util.List;
 
-// as tabelas do banco e suas colunas. O tipo de cada coluna é uma letra:
-// S = texto, I = número inteiro
-// a chave é o conjunto de colunas que identifica cada linha
-
+/**
+ * As tabelas do banco e suas colunas. O tipo de cada coluna é uma letra:
+ * S = texto, I = número inteiro. A chave é o conjunto de colunas que
+ * identifica cada linha (a "chave primária" da tabela).
+ */
 enum Tabela {
 
     USUARIO("usuario",
-            "id,tipo,nome,telefone,idade,senha_hash,senha_provisoria,ano_ingresso,id_turma",
-            "SSSSISISS", 0),
+            "id,tipo,nome,telefone,idade,senha_hash,senha_provisoria,ano_ingresso,id_turma,login,provisoria_valida_ate",
+            "SSSSISISSSS", 0),
 
     TURMA("turma",
             "id,tipo",
@@ -44,7 +45,7 @@ enum Tabela {
         this.chave = chave;
     }
 
-    // Texto que identifica a linha dentro da tabela (valores da chave juntos)
+    /** Texto que identifica a linha dentro da tabela (valores da chave juntos). */
     String chaveDe(List<Object> linha) {
         StringBuilder texto = new StringBuilder();
 
@@ -83,7 +84,7 @@ enum Tabela {
                 + ") VALUES (" + interrogacoes + ")";
     }
 
-    // As colunas que não são chave vêm primeiro, depois as da chave (cláusula WHERE). */
+    /** As colunas que não são chave vêm primeiro, depois as da chave (cláusula WHERE). */
     String sqlUpdate() {
         StringBuilder definicoes = new StringBuilder();
 
@@ -110,7 +111,7 @@ enum Tabela {
         return condicao.toString();
     }
 
-    // Posições das colunas que não fazem parte da chave
+    /** Posições das colunas que não fazem parte da chave. */
     int[] naoChave() {
         int[] resultado = new int[colunas.length - chave.length];
         int destino = 0;

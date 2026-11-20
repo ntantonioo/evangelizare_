@@ -17,7 +17,7 @@ import java.util.Objects;
 
 public class RepositorioSqlite implements AutoCloseable {
 
-    private static final int VERSAO_DO_ESQUEMA = 1;
+    private static final int VERSAO_DO_ESQUEMA = 2;
 
     private static final String[] ESQUEMA = {
             """
@@ -35,7 +35,9 @@ public class RepositorioSqlite implements AutoCloseable {
                 senha_hash       TEXT NOT NULL,
                 senha_provisoria INTEGER NOT NULL CHECK (senha_provisoria IN (0, 1)),
                 ano_ingresso     TEXT,
-                id_turma         TEXT REFERENCES turma (id) DEFERRABLE INITIALLY DEFERRED
+                id_turma         TEXT REFERENCES turma (id) DEFERRABLE INITIALLY DEFERRED,
+                login            TEXT NOT NULL DEFAULT '',
+                provisoria_valida_ate TEXT
             )""",
             """
             CREATE TABLE turma_catequista (
@@ -73,8 +75,20 @@ public class RepositorioSqlite implements AutoCloseable {
                 id_turma        TEXT NOT NULL REFERENCES turma (id) DEFERRABLE INITIALLY DEFERRED
             )""",
             "CREATE INDEX indice_usuario_turma ON usuario (id_turma)",
+            "CREATE UNIQUE INDEX indice_usuario_login ON usuario (lower(login))",
             "CREATE INDEX indice_noticia_turma ON noticia (id_turma)",
             "CREATE INDEX indice_atividade_turma ON atividade (id_turma)"
+    };
+
+    // Mudanças de esquema, na ordem. MIGRACOES[0] leva a versão 1 para a 2, e assim
+    // por diante. Um banco antigo recebe só as migrações que ainda não teve.
+    private static final String[][] MIGRACOES = {
+            {
+                    "ALTER TABLE usuario ADD COLUMN login TEXT NOT NULL DEFAULT ''",
+                    "ALTER TABLE usuario ADD COLUMN provisoria_valida_ate TEXT",
+                    "UPDATE usuario SET login = id",
+                    "CREATE UNIQUE INDEX indice_usuario_login ON usuario (lower(login))"
+            }
     };
 
     private final Connection conexao;
@@ -100,6 +114,7 @@ public class RepositorioSqlite implements AutoCloseable {
         return abrirUrl("jdbc:sqlite:" + arquivo.toAbsolutePath());
     }
 
+    /** Banco temporário, que some ao fechar. Útil em testes. */
     public static RepositorioSqlite abrirEmMemoria() {
         return abrirUrl("jdbc:sqlite::memory:");
     }
@@ -152,26 +167,40 @@ public class RepositorioSqlite implements AutoCloseable {
                             + versao + "). Atualize o sistema antes de abri-lo.");
         }
 
-        if (versao == 0) {
-            conexao.setAutoCommit(false);
+        if (versao == VERSAO_DO_ESQUEMA) {
+            return;
+        }
 
-            try (Statement comando = conexao.createStatement()) {
+        // Banco novo cria o esquema atual; banco antigo recebe as migrações que faltam.
+        // Tudo em uma transação: ou o banco passa para a versão nova, ou fica como estava.
+        conexao.setAutoCommit(false);
+
+        try (Statement comando = conexao.createStatement()) {
+            if (versao == 0) {
                 for (String instrucao : ESQUEMA) {
                     comando.execute(instrucao);
                 }
-
-                comando.execute("PRAGMA user_version = " + VERSAO_DO_ESQUEMA);
-                conexao.commit();
-
-            } catch (SQLException e) {
-                conexao.rollback();
-                throw e;
-
-            } finally {
-                conexao.setAutoCommit(true);
+            } else {
+                for (int de = versao; de < VERSAO_DO_ESQUEMA; de++) {
+                    for (String instrucao : MIGRACOES[de - 1]) {
+                        comando.execute(instrucao);
+                    }
+                }
             }
+
+            comando.execute("PRAGMA user_version = " + VERSAO_DO_ESQUEMA);
+            conexao.commit();
+
+        } catch (SQLException e) {
+            conexao.rollback();
+            throw e;
+
+        } finally {
+            conexao.setAutoCommit(true);
         }
     }
+
+    // ---------- leitura ----------
 
     /** Lê tudo do banco e devolve os objetos já ligados entre si. */
     public synchronized Estado carregar() {
@@ -205,6 +234,8 @@ public class RepositorioSqlite implements AutoCloseable {
 
         return estado;
     }
+
+    // ---------- gravação ----------
 
     /**
      * Grava no banco as diferenças entre o estado informado e o que o banco já

@@ -12,12 +12,11 @@ import java.util.Map;
 import model.*;
 
 /**
- * converte os objetos do sitema em linhas de tabela, e as linhas de volta em
- * objetos.
- * Ligaçoes entre objetos viram ID´s nas linhas e sao refeitas ao carregar, de modo que
- * continuam sendo os mesmos objetos que o sistema usa na memória
+ * Converte os objetos do sistema em linhas de tabela, e as linhas de volta em
+ * objetos. As ligações entre objetos (a turma de um catequisando, o autor de
+ * uma notícia) viram IDs nas linhas e são refeitas ao carregar, de modo que
+ * continuam sendo os mesmos objetos que o sistema usa na memória.
  */
-
 final class Mapeador {
 
     private Mapeador() {
@@ -33,7 +32,7 @@ final class Mapeador {
         return linhas;
     }
 
-    // objetos --> linhas
+    // ---------- objetos -> linhas ----------
 
     static Map<Tabela, Map<String, List<Object>>> paraLinhas(Estado estado) {
         Map<Tabela, Map<String, List<Object>>> linhas = linhasVazias();
@@ -116,9 +115,12 @@ final class Mapeador {
                 usuario.getSenha(),
                 usuario.isSenhaProvisoria() ? 1 : 0,
                 anoDeIngresso,
-                idTurma);
+                idTurma,
+                usuario.getLogin(),
+                usuario.getProvisoriaValidaAte() == null ? null : usuario.getProvisoriaValidaAte().toString());
     }
 
+    // Arrays.asList aceita valores nulos (List.of não aceita).
     private static List<Object> linha(Object... valores) {
         return new ArrayList<>(java.util.Arrays.asList(valores));
     }
@@ -128,7 +130,7 @@ final class Mapeador {
         linhas.get(tabela).put(tabela.chaveDe(linha), linha);
     }
 
-    // linhas --> objetos
+    // ---------- linhas -> objetos ----------
 
     static Estado paraObjetos(Map<Tabela, Map<String, List<Object>>> linhas) {
         try {
@@ -160,7 +162,7 @@ final class Mapeador {
             };
 
             if (usuario != null) {
-                usuario.setSenhaProvisoria(inteiro(l, 6) == 1);
+                aplicarAcesso(usuario, l);
                 usuarios.put(usuario.getId(), usuario);
             }
         }
@@ -209,7 +211,7 @@ final class Mapeador {
 
             Catequisando catequisando = new Catequisando(
                     texto(l, 0), texto(l, 2), texto(l, 3), inteiro(l, 4), texto(l, 5), turma);
-            catequisando.setSenhaProvisoria(inteiro(l, 6) == 1);
+            aplicarAcesso(catequisando, l);
 
             for (List<Object> vinculo : vinculosPorCatequisando.getOrDefault(texto(l, 0), List.of())) {
                 if (!(usuarios.get(texto(vinculo, 1)) instanceof Responsavel responsavel)) {
@@ -267,6 +269,18 @@ final class Mapeador {
                 new ArrayList<>(turmas.values()),
                 noticias,
                 atividades);
+    }
+
+    // Dados de acesso: senha provisória, validade do código e nome de usuário.
+    private static void aplicarAcesso(Usuario usuario, List<Object> l) {
+        usuario.setSenhaProvisoria(inteiro(l, 6) == 1);
+
+        if (l.get(10) != null) {
+            usuario.setProvisoriaValidaAte(LocalDateTime.parse(texto(l, 10)));
+        }
+
+        // Se por algum motivo não houver login gravado, vale o ID.
+        usuario.setLogin(l.get(9) == null || texto(l, 9).isBlank() ? usuario.getId() : texto(l, 9));
     }
 
     // Agrupa linhas pela coluna "porColuna" e ordena cada grupo pela coluna "ordem".
