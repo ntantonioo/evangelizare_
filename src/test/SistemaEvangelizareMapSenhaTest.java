@@ -11,6 +11,14 @@ import org.junit.jupiter.api.Test;
 
 import model.*;
 
+/**
+ * Testa primeiro acesso, senhas provisórias, troca e redefinição de senha.
+ *
+ *   ADM001 (administrador criado no primeiro acesso, senha "admin1234")
+ *   CAT001 Maria -> INF-01, com o catequisando CQS001 (criança, sem login) e a responsável RESP-PAULA
+ *   CAT002 João  -> CJ-01 (Crisma Jovem), com o catequisando CQS002, que tem login
+ *   Todos foram cadastrados por outra pessoa, com a senha provisória "senha123".
+ */
 class SistemaEvangelizareMapSenhaTest {
 
     static {
@@ -22,6 +30,7 @@ class SistemaEvangelizareMapSenhaTest {
     private Administrador admin;
     private Catequista maria;
     private Catequisando ana;
+    private Catequisando caio;
     private Responsavel paula;
 
     @BeforeEach
@@ -41,6 +50,15 @@ class SistemaEvangelizareMapSenhaTest {
         ana = new Catequisando("CQS001", "Ana Clara", "83966660000", 9, "senha123", infantil);
         ana.adicionarResponsavel(paula, "Mãe");
         sistema.cadastrarCatequisando(ana);
+
+        Catequista joao = new Catequista("CAT002", "João Pereira", "83988880001", 35, "senha123", "2019");
+        sistema.cadastrarCatequista(joao);
+        Turma jovem = new Turma("CJ-01", TipoTurma.CRISMA_JOVEM, joao);
+        sistema.cadastrarTurma(jovem);
+
+        caio = new Catequisando("CQS002", "Caio Souza", "83966660001", 15, "senha123", jovem);
+        caio.adicionarResponsavel(paula, "Tia");
+        sistema.cadastrarCatequisando(caio);
     }
 
     private static void assertMensagemContem(IllegalArgumentException e, String trecho) {
@@ -128,7 +146,7 @@ class SistemaEvangelizareMapSenhaTest {
             sistema.alterarSenha("RESP-PAULA", "senha123", "paulaNova1");
             assertFalse(paula.isSenhaProvisoria());
 
-            Catequisando bia = new Catequisando("CQS002", "Bia", "83966660001", 8, "senha123", ana.getTurma());
+            Catequisando bia = new Catequisando("CQS003", "Bia", "83966660003", 8, "senha123", ana.getTurma());
             bia.adicionarResponsavel(paula, "Mãe");
             sistema.cadastrarCatequisando(bia);
 
@@ -156,11 +174,11 @@ class SistemaEvangelizareMapSenhaTest {
         @DisplayName("funciona para todos os perfis")
         void todosOsPerfis() {
             sistema.alterarSenha("ADM001", "admin1234", "adminNova1");
-            sistema.alterarSenha("CQS001", "senha123", "anaNova123");
+            sistema.alterarSenha("CQS002", "senha123", "caioNova123");
             sistema.alterarSenha("RESP-PAULA", "senha123", "paulaNova1");
 
             assertTrue(sistema.autenticarUsuario("ADM001", "adminNova1"));
-            assertTrue(sistema.autenticarUsuario("CQS001", "anaNova123"));
+            assertTrue(sistema.autenticarUsuario("CQS002", "caioNova123"));
             assertTrue(sistema.autenticarUsuario("RESP-PAULA", "paulaNova1"));
         }
 
@@ -219,7 +237,7 @@ class SistemaEvangelizareMapSenhaTest {
         void naoAfetaOutros() {
             sistema.alterarSenha("CAT001", "senha123", "novaSenha1");
 
-            assertTrue(sistema.autenticarUsuario("CQS001", "senha123"), "Ana tinha a mesma senha e continua com ela");
+            assertTrue(sistema.autenticarUsuario("CQS002", "senha123"), "Caio tinha a mesma senha e continua com ela");
             assertTrue(sistema.autenticarUsuario("RESP-PAULA", "senha123"));
             assertTrue(sistema.autenticarUsuario("ADM001", "admin1234"));
         }
@@ -259,11 +277,20 @@ class SistemaEvangelizareMapSenhaTest {
         @Test
         @DisplayName("funciona para catequisando e responsável")
         void outrosPerfis() {
-            sistema.redefinirSenha("CQS001", "temporaria", admin);
+            sistema.redefinirSenha("CQS002", "temporaria", admin);
             sistema.redefinirSenha("RESP-PAULA", "temporaria", admin);
 
-            assertTrue(sistema.autenticarUsuario("CQS001", "temporaria"));
+            assertTrue(sistema.autenticarUsuario("CQS002", "temporaria"));
             assertTrue(sistema.autenticarUsuario("RESP-PAULA", "temporaria"));
+        }
+
+        @Test
+        @DisplayName("criança da Catequese Infantil não tem acesso próprio, então não há senha a redefinir")
+        void criancaDaCatequeseInfantil() {
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                    () -> sistema.redefinirSenha("CQS001", "temporaria", admin));
+            assertMensagemContem(e, "Catequese Infantil");
+            assertFalse(sistema.autenticarUsuario("CQS001", "temporaria"));
         }
 
         @Test

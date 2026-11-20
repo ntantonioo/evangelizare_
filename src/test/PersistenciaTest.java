@@ -28,6 +28,12 @@ import service.SistemaEvangelizareMap;
 import service.atividade.AtividadeService;
 import service.atividade.AtividadeServiceMap;
 
+/**
+ * Testa o banco de dados de ponta a ponta: cada teste usa um arquivo de banco
+ * em uma pasta temporária. "Reiniciar o sistema" é abrir o mesmo arquivo de
+ * novo, com serviços novos e vazios, como acontece quando o programa é
+ * fechado e aberto outra vez.
+ */
 class PersistenciaTest {
 
     static {
@@ -72,6 +78,12 @@ class PersistenciaTest {
         return new Programa(arquivo());
     }
 
+    // Monta um cenário completo e devolve alguns objetos para conferência.
+    //   ADM001 (admin1234)
+    //   CAT001 Maria -> INF-01, com o catequisando CQS001 (responsáveis RESP-PAULA e RESP-JOSE)
+    //   CAT002 João  -> CJ-01
+    //   CAT003 Rosa  -> sem turma
+    //   2 notícias (uma geral, uma de INF-01) e 2 atividades (com e sem prazo)
     private static Administrador popular(Programa p) {
         Administrador admin = new Administrador("ADM001", "Administrador", "83999999999", 30, "admin1234");
         p.sistema.cadastrarAdministradorInicial(admin);
@@ -207,7 +219,7 @@ class PersistenciaTest {
             try (Programa p = abrir()) {
                 assertTrue(p.sistema.autenticarUsuario("ADM001", "admin1234"));
                 assertTrue(p.sistema.autenticarUsuario("CAT001", "senha123"));
-                assertTrue(p.sistema.autenticarUsuario("CQS001", "senha123"));
+                assertFalse(p.sistema.autenticarUsuario("CQS001", "senha123"), "criança da Catequese Infantil não tem login");
                 assertTrue(p.sistema.autenticarUsuario("RESP-PAULA", "senha123"));
                 assertFalse(p.sistema.autenticarUsuario("CAT001", "errada123"));
 
@@ -549,6 +561,107 @@ class PersistenciaTest {
                 assertNull(p.sistema.pesquisarUsuarioPorId("ADM999"));
                 assertEquals(Set.of("N1", "N2"), idsDeNoticias(p.sistema.pesquisarNoticiasDisponiveisPara(
                         p.sistema.pesquisarUsuarioPorId("ADM001"))));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Dados de acesso")
+    class DadosDeAcesso {
+
+        @Test
+        @DisplayName("login e validade do código de primeiro acesso sobrevivem a reiniciar")
+        void loginEValidade() {
+            java.time.LocalDateTime validade;
+
+            try (Programa p = abrir()) {
+                p.sistema.cadastrarAdministradorInicial(
+                        new Administrador("ADM001", "Administrador", "83999999999", 30, "admin1234"));
+
+                Catequista lucia = new Catequista("id-interno-lucia", "Lúcia Reis", "83900000000", 30, "K7M2-9QXA", "2020");
+                lucia.setLogin("lucia.reis");
+                p.sistema.cadastrarCatequista(lucia);
+                validade = lucia.getProvisoriaValidaAte();
+
+                assertNotNull(validade);
+            }
+
+            try (Programa p = abrir()) {
+                Usuario lucia = p.sistema.pesquisarUsuarioPorLogin("lucia.reis");
+
+                assertNotNull(lucia);
+                assertEquals("id-interno-lucia", lucia.getId());
+                assertEquals(validade, lucia.getProvisoriaValidaAte());
+                assertTrue(lucia.isSenhaProvisoria());
+                assertTrue(p.sistema.autenticarUsuario("Lucia.Reis", "k7m2-9qxa"));
+                assertFalse(p.sistema.autenticarUsuario("id-interno-lucia", "K7M2-9QXA"));
+            }
+        }
+
+        @Test
+        @DisplayName("o banco impede dois usuários com o mesmo login, mesmo com letras diferentes")
+        void loginUnicoNoBanco() throws SQLException {
+            try (Programa p = abrir()) {
+                // cria o arquivo
+            }
+
+            try (Connection c = DriverManager.getConnection("jdbc:sqlite:" + arquivo());
+                 Statement s = c.createStatement()) {
+                s.execute("INSERT INTO usuario (id, tipo, nome, telefone, idade, senha_hash, senha_provisoria, login) "
+                        + "VALUES ('U1', 'ADMINISTRADOR', 'Ana', '1', 30, 'h', 0, 'ana')");
+
+                assertThrows(SQLException.class, () -> s.execute(
+                        "INSERT INTO usuario (id, tipo, nome, telefone, idade, senha_hash, senha_provisoria, login) "
+                                + "VALUES ('U2', 'ADMINISTRADOR', 'Outra Ana', '2', 31, 'h', 0, 'ANA')"));
+            }
+        }
+
+        @Test
+        @DisplayName("um banco antigo (versão 1) é atualizado sozinho, sem perder dados")
+        void migracaoDaVersaoUm() throws SQLException {
+            String hash = seguranca.SenhaHasher.gerarHash("admin1234");
+
+            try (Connection c = DriverManager.getConnection("jdbc:sqlite:" + arquivo());
+                 Statement s = c.createStatement()) {
+                // O esquema da versão 1: usuário sem login e sem validade do código.
+                s.execute("CREATE TABLE turma (id TEXT PRIMARY KEY, tipo TEXT NOT NULL)");
+                s.execute("CREATE TABLE usuario (id TEXT PRIMARY KEY, tipo TEXT NOT NULL, nome TEXT NOT NULL, "
+                        + "telefone TEXT NOT NULL, idade INTEGER NOT NULL, senha_hash TEXT NOT NULL, "
+                        + "senha_provisoria INTEGER NOT NULL, ano_ingresso TEXT, id_turma TEXT)");
+                s.execute("CREATE TABLE turma_catequista (id_turma TEXT NOT NULL, id_catequista TEXT NOT NULL, "
+                        + "ordem INTEGER NOT NULL, PRIMARY KEY (id_turma, id_catequista))");
+                s.execute("CREATE TABLE vinculo_responsavel (id_catequisando TEXT NOT NULL, id_responsavel TEXT NOT NULL, "
+                        + "parentesco TEXT NOT NULL, ordem INTEGER NOT NULL, PRIMARY KEY (id_catequisando, id_responsavel))");
+                s.execute("CREATE TABLE noticia (id TEXT PRIMARY KEY, titulo TEXT NOT NULL, conteudo TEXT NOT NULL, "
+                        + "tipo TEXT NOT NULL, data_publicacao TEXT NOT NULL, id_autor TEXT NOT NULL, id_turma TEXT)");
+                s.execute("CREATE TABLE atividade (id TEXT PRIMARY KEY, titulo TEXT NOT NULL, descricao TEXT NOT NULL, "
+                        + "data_publicacao TEXT NOT NULL, prazo TEXT, id_autor TEXT NOT NULL, id_turma TEXT NOT NULL)");
+                s.execute("INSERT INTO usuario (id, tipo, nome, telefone, idade, senha_hash, senha_provisoria) "
+                        + "VALUES ('ADM001', 'ADMINISTRADOR', 'Administrador', '83999999999', 30, '" + hash + "', 0)");
+                s.execute("PRAGMA user_version = 1");
+            }
+
+            try (Programa p = abrir()) {
+                assertTrue(p.sistema.existeAdministrador());
+                assertEquals("ADM001", p.sistema.pesquisarUsuarioPorId("ADM001").getLogin(), "o login do usuário antigo é o ID dele");
+                assertTrue(p.sistema.autenticarUsuario("ADM001", "admin1234"));
+
+                // um cadastro novo, já no esquema novo
+                Catequista lucia = new Catequista("id-lucia", "Lúcia Reis", "83900000000", 30, "K7M2-9QXA", "2020");
+                lucia.setLogin("lucia.reis");
+                p.sistema.cadastrarCatequista(lucia);
+            }
+
+            try (Connection c = DriverManager.getConnection("jdbc:sqlite:" + arquivo());
+                 Statement s = c.createStatement();
+                 java.sql.ResultSet r = s.executeQuery("PRAGMA user_version")) {
+                r.next();
+                assertEquals(2, r.getInt(1), "o banco passou para a versão 2");
+            }
+
+            try (Programa p = abrir()) { // abrir de novo não migra outra vez
+                assertTrue(p.sistema.autenticarUsuario("lucia.reis", "K7M2-9QXA"));
+                assertTrue(p.sistema.autenticarUsuario("ADM001", "admin1234"));
             }
         }
     }

@@ -1,6 +1,6 @@
-import static org.junit.jupiter.api.Assertions.*;
-
 import service.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Set;
@@ -18,6 +18,16 @@ import exception.ResponsavelNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 import model.*;
 
+/**
+ * Testa as regras de negócio do serviço. Cada teste começa com um sistema
+ * novo, montado em setUp():
+ *
+ *   ADM001 (administrador)
+ *   CAT001 Maria -> turma INF-01 (Catequese Infantil)
+ *   CAT002 João  -> turma CJ-01  (Crisma Jovem)
+ *   CAT003 Rosa  -> turma CA-01  (Crisma Adulto)
+ *   CAT004 Pedro -> sem turma
+ */
 class SistemaEvangelizareMapTest {
 
     static {
@@ -52,6 +62,8 @@ class SistemaEvangelizareMapTest {
             sistema.cadastrarTurma(t);
         }
     }
+
+    // ---------- auxiliares ----------
 
     private static Catequista novoCatequista(String id, String nome) {
         return new Catequista(id, nome, "83988880000", 35, "senha123", "2018");
@@ -474,7 +486,9 @@ class SistemaEvangelizareMapTest {
             sistema.cadastrarCatequisando(c);
 
             assertSame(c, sistema.pesquisarCatequisandoPorId("CQS001"));
-            assertTrue(sistema.autenticarUsuario("CQS001", "senha123"));
+            assertFalse(sistema.autenticarUsuario("CQS001", "senha123"),
+                    "criança da Catequese Infantil não tem login: o acesso é dos responsáveis");
+            assertTrue(sistema.autenticarUsuario("RESP-CQS001", "senha123"));
         }
 
         @Test
