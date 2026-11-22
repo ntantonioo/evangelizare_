@@ -30,6 +30,7 @@ O sistema busca organizar as informações e definir permissões de acordo com o
 - [x] Criação de Hasher para segurança das senhas
 - [x] Atividades: o catequista publica atividades para a sua turma, com título, descrição e prazo opcional; os catequisandos consultam; o administrador acompanha e remove.
 - [x] Banco de dados SQLite: os dados são gravados automaticamente a cada alteração e continuam lá quando o programa é fechado e aberto de novo.
+- [x] Escolha de pessoas por busca de nome em listas numeradas, sem digitar IDs.
 - [ ] Desenvolver uma interface gráfica.
 
 > O projeto está em desenvolvimento. A lista de funcionalidades será atualizada conforme novas etapas forem concluídas.
@@ -56,6 +57,9 @@ O sistema contempla diferentes modalidades de catequese:
 ## 🛠️ Tecnologias e conceitos
 
 - **Java** — linguagem de programação.
+- **Maven** — gerenciamento do projeto e das dependências.
+- **JUnit 5** — testes automatizados.
+- **JDBC e SQLite** — persistência dos dados em banco.
 - **Programação Orientada a Objetos (POO)** — organização do sistema em classes, objetos, interfaces e enums.
 - **Collections Framework** — gerenciamento de dados em coleções.
 - **Tratamento de exceções** — identificação e tratamento de situações excepcionais.
@@ -72,7 +76,7 @@ O código é organizado em pacotes de acordo com suas responsabilidades.
 | `exception` | Exceções específicas para situações como registros não encontrados. |
 | `persistencia` | Banco de dados SQLite: esquema, leitura, gravação das diferenças e a gravação automática após cada alteração.
 |`security`| Hash e política de senhas. 
-| `ui` | Interface de interação com o usuário, atualmente por meio do terminal. |
+| `ui` | Interface de interação com o usuário, atualmente por meio do terminal, dividida em ui.menus e ui.telas. |
 
 Essa separação busca facilitar a manutenção, a leitura e a evolução do código.
 
