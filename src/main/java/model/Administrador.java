@@ -15,4 +15,9 @@ public class Administrador extends Usuario {
                 ", idade=" + getIdade() +
                 '}';
     }
+
+    @Override
+    public boolean ehAdministrador() {
+        return true;
+    }
 }

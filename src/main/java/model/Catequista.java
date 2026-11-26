@@ -3,6 +3,7 @@ package model;
 public class Catequista extends Usuario {
 
     private String anoDeIngresso;
+    private boolean coordenador;
 
     public Catequista(
             String id,
@@ -51,5 +52,18 @@ public class Catequista extends Usuario {
         }
 
         this.anoDeIngresso = anoDeIngresso;
+    }
+
+    public boolean isCoordenador() {
+        return coordenador;
+    }
+
+    public void setCoordenador(boolean coordenador) {
+        this.coordenador = coordenador;
+    }
+
+    @Override
+    public boolean ehAdministrador() {
+        return coordenador;
     }
 }

@@ -1,4 +1,3 @@
-
 package model;
 
 import java.time.LocalDateTime;
@@ -21,6 +20,11 @@ public abstract class Usuario {
         this.telefone = telefone;
         this.idade = idade;
         this.senha = senha;
+        this.login = id;
+    }
+
+    public boolean ehAdministrador() {
+        return false;
     }
 
     public LocalDateTime getProvisoriaValidaAte() {
