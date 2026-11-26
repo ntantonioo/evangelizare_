@@ -358,6 +358,8 @@ class PersistenciaTest {
         }
     }
 
+    // =====================================================================
+
     @Nested
     @DisplayName("Alterações são gravadas")
     class Alteracoes {
@@ -479,6 +481,8 @@ class PersistenciaTest {
         }
     }
 
+    // =====================================================================
+
     @Nested
     @DisplayName("Integridade: o que depende de algo que saiu também sai")
     class Integridade {
@@ -565,6 +569,10 @@ class PersistenciaTest {
         }
     }
 
+    // =====================================================================
+
+    // =====================================================================
+
     @Nested
     @DisplayName("Dados de acesso")
     class DadosDeAcesso {
@@ -617,7 +625,7 @@ class PersistenciaTest {
         }
 
         @Test
-        @DisplayName("um banco antigo (versão 1) é atualizado sozinho, sem perder dados")
+        @DisplayName("um banco antigo (versão 1) é atualizado sozinho, passando por todas as versões, sem perder dados")
         void migracaoDaVersaoUm() throws SQLException {
             String hash = seguranca.SenhaHasher.gerarHash("admin1234");
 
@@ -645,6 +653,7 @@ class PersistenciaTest {
                 assertTrue(p.sistema.existeAdministrador());
                 assertEquals("ADM001", p.sistema.pesquisarUsuarioPorId("ADM001").getLogin(), "o login do usuário antigo é o ID dele");
                 assertTrue(p.sistema.autenticarUsuario("ADM001", "admin1234"));
+                assertTrue(p.sistema.pesquisarUsuarioPorId("ADM001").ehAdministrador());
 
                 // um cadastro novo, já no esquema novo
                 Catequista lucia = new Catequista("id-lucia", "Lúcia Reis", "83900000000", 30, "K7M2-9QXA", "2020");
@@ -656,12 +665,67 @@ class PersistenciaTest {
                  Statement s = c.createStatement();
                  java.sql.ResultSet r = s.executeQuery("PRAGMA user_version")) {
                 r.next();
-                assertEquals(2, r.getInt(1), "o banco passou para a versão 2");
+                assertEquals(3, r.getInt(1), "o banco passou da versão 1 para a 3");
             }
 
             try (Programa p = abrir()) { // abrir de novo não migra outra vez
                 assertTrue(p.sistema.autenticarUsuario("lucia.reis", "K7M2-9QXA"));
                 assertTrue(p.sistema.autenticarUsuario("ADM001", "admin1234"));
+            }
+        }
+    }
+
+    // =====================================================================
+
+    @Nested
+    @DisplayName("Coordenação e visão geral")
+    class Coordenacao {
+
+        @Test
+        @DisplayName("o catequista coordenador continua coordenador depois de reiniciar")
+        void coordenadorPersiste() {
+            try (Programa p = abrir()) {
+                Administrador admin = popular(p);
+                p.sistema.definirCoordenador("CAT001", true, admin);
+            }
+
+            try (Programa p = abrir()) {
+                Catequista maria = p.sistema.pesquisarCatequistaPorId("CAT001");
+
+                assertTrue(maria.isCoordenador());
+                assertTrue(maria.ehAdministrador());
+                assertFalse(p.sistema.pesquisarCatequistaPorId("CAT002").isCoordenador());
+
+                // como administrador, ele pode ver o resumo de qualquer turma
+                assertEquals(1, p.sistema.resumirTurma("CJ-01", maria).getCatequistas().size());
+            }
+        }
+
+        @Test
+        @DisplayName("retirar a coordenação também é gravado")
+        void retiradaPersiste() {
+            try (Programa p = abrir()) {
+                Administrador admin = popular(p);
+                p.sistema.definirCoordenador("CAT001", true, admin);
+                p.sistema.definirCoordenador("CAT001", false, admin);
+            }
+
+            try (Programa p = abrir()) {
+                assertFalse(p.sistema.pesquisarCatequistaPorId("CAT001").isCoordenador());
+            }
+        }
+
+        @Test
+        @DisplayName("consultar o resumo da turma não grava nada no banco")
+        void resumoNaoGrava() {
+            try (Programa p = abrir()) {
+                Administrador admin = popular(p);
+                p.sistema.atualizarCatequista("CAT001", "83900001111", 41, "2014");
+                assertEquals(1, p.repositorio.linhasAlteradasNaUltimaSincronizacao());
+
+                p.sistema.resumirTurma("INF-01", admin);
+
+                assertEquals(1, p.repositorio.linhasAlteradasNaUltimaSincronizacao(), "continua sendo a gravação anterior");
             }
         }
     }
