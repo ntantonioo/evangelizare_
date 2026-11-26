@@ -16,6 +16,7 @@ import model.Catequista;
 import model.Turma;
 import model.Usuario;
 import model.Responsavel;
+import model.ResumoDaTurma;
 import model.VinculoResponsavel;
 
 public interface SistemaEvangelizare {
@@ -26,11 +27,6 @@ public interface SistemaEvangelizare {
 
     Usuario pesquisarUsuarioPorId(String id);
 
-    /**
-     * Confere nome de usuário e senha. Falha também quando o código de primeiro
-     * acesso venceu, e para crianças da Catequese Infantil, que não têm acesso
-     * próprio (quem acompanha é o responsável).
-     */
     boolean autenticarUsuario(String login, String senha);
 
     Usuario pesquisarUsuarioPorLogin(String login);
@@ -39,24 +35,14 @@ public interface SistemaEvangelizare {
 
     List<Responsavel> pesquisarResponsavelPorNome(String nome);
 
-    /** Sugere um nome de usuário livre a partir do nome da pessoa. */
     String sugerirLogin(String nome);
 
     boolean existeAdministrador();
 
-    /**
-     * Cria o primeiro administrador. Só funciona enquanto não existe nenhum
-     * administrador, e a senha precisa seguir a política de senhas.
-     */
     void cadastrarAdministradorInicial(Administrador administrador);
 
-    /** Troca a senha do próprio usuário, que precisa informar a senha atual. */
     void alterarSenha(String idUsuario, String senhaAtual, String novaSenha);
 
-    /**
-     * Define uma senha provisória para um usuário que esqueceu a dele. Só o
-     * administrador pode; o usuário será obrigado a trocá-la ao entrar.
-     */
     void redefinirSenha(String idUsuario, String senhaProvisoria, Usuario administradorLogado);
 
     // Catequista
@@ -109,6 +95,15 @@ public interface SistemaEvangelizare {
 
     List<Catequisando> pesquisarCatequisandosPorResponsavel(String idResponsavel)
             throws ResponsavelNaoEncontradoException;
+
+    // Coordenação e visão geral (administrador)
+
+    void definirCoordenador(String idCatequista, boolean coordenador, Usuario administradorLogado)
+            throws CatequistaNaoEncontradoException;
+
+    /** A turma completa: catequistas, catequisandos e os responsáveis de cada um. */
+    ResumoDaTurma resumirTurma(String idTurma, Usuario administradorLogado)
+            throws TurmaNaoEncontradaException;
 
     // Turma
 

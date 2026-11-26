@@ -103,7 +103,7 @@ public class AtividadeServiceMap implements AtividadeService {
         Usuario usuario = exigirUsuarioCadastrado(usuarioLogado);
         Atividade atividade = pesquisarAtividadePorId(idAtividade);
 
-        boolean administrador = usuario instanceof Administrador;
+        boolean administrador = usuario.ehAdministrador();
         boolean autor = usuario instanceof Catequista
                 && atividade.getAutor().getId().equals(usuario.getId());
 
@@ -142,7 +142,7 @@ public class AtividadeServiceMap implements AtividadeService {
                         Comparator.nullsLast(Comparator.naturalOrder()))
                 .thenComparing(Atividade::getIdAtividade);
 
-        if (logado instanceof Administrador) {
+        if (logado.ehAdministrador()) {
             return atividades.values().stream()
                     .sorted(ordem)
                     .collect(Collectors.toList());

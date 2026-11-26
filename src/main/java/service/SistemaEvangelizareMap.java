@@ -62,7 +62,6 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         return new ArrayList<>(noticias.values());
     }
 
-    // Substitui t0do o conteúdo do sistema pelos dados carregados do banco.
     public void restaurar(
             List<Usuario> listaUsuarios,
             List<Turma> listaTurmas,
@@ -112,6 +111,9 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
     public void cadastrarCatequista(Catequista catequista) {
         validarNovoUsuario(catequista);
 
+        // Quem vira coordenador é decidido depois, por um administrador.
+        catequista.setCoordenador(false);
+
         if (catequista.getAnoDeIngresso() == null
                 || catequista.getAnoDeIngresso().isBlank()) {
             throw new IllegalArgumentException(
@@ -147,6 +149,12 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             throw new IllegalArgumentException(
                     "Não é possível remover este catequista, "
                             + "pois ele ainda possui turmas associadas."
+            );
+        }
+
+        if (catequistas.get(id).isCoordenador() && contarAdministradores() <= 1) {
+            throw new IllegalArgumentException(
+                    "Não é possível remover o último administrador do sistema."
             );
         }
 
@@ -400,11 +408,68 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
         registrarResponsaveis(novosResponsaveis);
     }
 
+    // COORDENAÇÃO E VISÃO GERAL
+
+    private long contarAdministradores() {
+        return usuarios.values().stream().filter(Usuario::ehAdministrador).count();
+    }
+
+    // O usuário precisa ser exatamente o objeto cadastrado e ter permissão de administrador.
+    private void exigirAdministrador(Usuario usuario, String mensagem) {
+        if (usuario == null
+                || !usuario.ehAdministrador()
+                || usuarios.get(usuario.getId()) != usuario) {
+            throw new IllegalArgumentException(mensagem);
+        }
+    }
+
+    @Override
+    public void definirCoordenador(
+            String idCatequista, boolean coordenador, Usuario administradorLogado)
+            throws CatequistaNaoEncontradoException {
+
+        exigirAdministrador(
+                administradorLogado, "Somente o administrador pode definir coordenadores.");
+
+        Catequista catequista = pesquisarCatequistaPorId(idCatequista);
+
+        if (!coordenador && catequista.isCoordenador() && contarAdministradores() <= 1) {
+            throw new IllegalArgumentException(
+                    "Não é possível retirar a coordenação do último administrador do sistema."
+            );
+        }
+
+        catequista.setCoordenador(coordenador);
+    }
+
+    @Override
+    public ResumoDaTurma resumirTurma(String idTurma, Usuario administradorLogado)
+            throws TurmaNaoEncontradaException {
+
+        exigirAdministrador(
+                administradorLogado, "Somente o administrador pode ver o resumo da turma.");
+
+        Turma turma = idTurma == null ? null : turmas.get(idTurma.trim());
+
+        if (turma == null) {
+            throw new TurmaNaoEncontradaException("Turma não encontrada: " + idTurma);
+        }
+
+        List<Catequisando> alunos = catequisandos.values().stream()
+                .filter(c -> c.getTurma() != null
+                        && c.getTurma().getIdTurma().equals(turma.getIdTurma()))
+                .sorted(Comparator.comparing(Catequisando::getNome)
+                        .thenComparing(Catequisando::getId))
+                .collect(Collectors.toList());
+
+        return new ResumoDaTurma(turma, turma.getCatequistas(), alunos);
+    }
+
     // SENHAS E PRIMEIRO ACESSO
 
     @Override
     public boolean existeAdministrador() {
-        return usuarios.values().stream().anyMatch(u -> u instanceof Administrador);
+        return contarAdministradores() > 0;
     }
 
     @Override
@@ -459,7 +524,8 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             String senhaProvisoria,
             Usuario administradorLogado) {
 
-        if (!(administradorLogado instanceof Administrador)
+        if (administradorLogado == null
+                || !administradorLogado.ehAdministrador()
                 || usuarios.get(administradorLogado.getId()) != administradorLogado) {
             throw new IllegalArgumentException(
                     "Somente o administrador pode redefinir senhas."
@@ -1245,7 +1311,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
             }
         }
 
-        if (usuarioLogado instanceof Administrador) {
+        if (usuarioLogado.ehAdministrador()) {
 
         } else if (usuarioLogado instanceof Catequista) {
 
@@ -1283,7 +1349,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
 
         validarUsuarioLogado(usuarioLogado);
 
-        if (!(usuarioLogado instanceof Administrador)) {
+        if (!usuarioLogado.ehAdministrador()) {
             throw new IllegalArgumentException(
                     "Somente o administrador pode remover notícias."
             );
@@ -1351,7 +1417,7 @@ public class SistemaEvangelizareMap implements  SistemaEvangelizare {
                     Turma turmaNoticia = noticia.getTurma();
 
                     // adm pode consultar todas as noticias
-                    if (usuarioLogado instanceof Administrador) {
+                    if (usuarioLogado.ehAdministrador()) {
                         return true;
                     }
 
