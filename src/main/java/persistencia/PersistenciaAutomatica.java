@@ -24,7 +24,6 @@ public class PersistenciaAutomatica {
         this.atividades = atividades;
     }
 
-    /** Lê o banco e coloca o conteúdo nos serviços. Chame uma vez, ao iniciar. */
     public void carregar() {
         synchronized (trava) {
             Estado estado = repositorio.carregar();
@@ -81,6 +80,8 @@ public class PersistenciaAutomatica {
 
         return nome.startsWith("pesquisar")
                 || nome.startsWith("existe")
-                || nome.startsWith("autenticar");
+                || nome.startsWith("autenticar")
+                || nome.startsWith("resumir")
+                || nome.startsWith("listar");
     }
 }

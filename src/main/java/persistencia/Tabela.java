@@ -10,7 +10,8 @@ import java.util.List;
 enum Tabela {
 
     USUARIO("usuario",
-            "id,tipo,nome,telefone,idade,senha_hash,senha_provisoria,ano_ingresso,id_turma,login,provisoria_valida_ate",
+            "id,tipo,nome,telefone,idade,senha_hash,senha_provisoria,ano_ingresso,id_turma,login," +
+                    "provisoria_valida_ate, coordenador",
             "SSSSISISSSS", 0),
 
     TURMA("turma",

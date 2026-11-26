@@ -17,7 +17,7 @@ import java.util.Objects;
 
 public class RepositorioSqlite implements AutoCloseable {
 
-    private static final int VERSAO_DO_ESQUEMA = 2;
+    private static final int VERSAO_DO_ESQUEMA = 3;
 
     private static final String[] ESQUEMA = {
             """
@@ -37,7 +37,8 @@ public class RepositorioSqlite implements AutoCloseable {
                 ano_ingresso     TEXT,
                 id_turma         TEXT REFERENCES turma (id) DEFERRABLE INITIALLY DEFERRED,
                 login            TEXT NOT NULL DEFAULT '',
-                provisoria_valida_ate TEXT
+                provisoria_valida_ate TEXT,
+                coordenador      INTEGER NOT NULL DEFAULT 0
             )""",
             """
             CREATE TABLE turma_catequista (
@@ -80,14 +81,15 @@ public class RepositorioSqlite implements AutoCloseable {
             "CREATE INDEX indice_atividade_turma ON atividade (id_turma)"
     };
 
-    // Mudanças de esquema, na ordem. MIGRACOES[0] leva a versão 1 para a 2, e assim
-    // por diante. Um banco antigo recebe só as migrações que ainda não teve.
     private static final String[][] MIGRACOES = {
             {
                     "ALTER TABLE usuario ADD COLUMN login TEXT NOT NULL DEFAULT ''",
                     "ALTER TABLE usuario ADD COLUMN provisoria_valida_ate TEXT",
                     "UPDATE usuario SET login = id",
                     "CREATE UNIQUE INDEX indice_usuario_login ON usuario (lower(login))"
+            },
+            {
+                    "ALTER TABLE usuario ADD COLUMN coordenador INTEGER NOT NULL DEFAULT 0"
             }
     };
 

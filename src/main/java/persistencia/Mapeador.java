@@ -117,7 +117,8 @@ final class Mapeador {
                 anoDeIngresso,
                 idTurma,
                 usuario.getLogin(),
-                usuario.getProvisoriaValidaAte() == null ? null : usuario.getProvisoriaValidaAte().toString());
+                usuario.getProvisoriaValidaAte() == null ? null : usuario.getProvisoriaValidaAte().toString(),
+                usuario instanceof Catequista c && c.isCoordenador() ? 1 : 0);
     }
 
     // Arrays.asList aceita valores nulos (List.of não aceita).
@@ -153,8 +154,7 @@ final class Mapeador {
             Usuario usuario = switch (texto(l, 1)) {
                 case "ADMINISTRADOR" -> new Administrador(
                         texto(l, 0), texto(l, 2), texto(l, 3), inteiro(l, 4), texto(l, 5));
-                case "CATEQUISTA" -> new Catequista(
-                        texto(l, 0), texto(l, 2), texto(l, 3), inteiro(l, 4), texto(l, 5), texto(l, 7));
+                case "CATEQUISTA" -> catequistaDe(l);
                 case "RESPONSAVEL" -> new Responsavel(
                         texto(l, 0), texto(l, 2), texto(l, 3), inteiro(l, 4), texto(l, 5));
                 case "CATEQUISANDO" -> null; // depende da turma: vem no passo 3
@@ -269,6 +269,14 @@ final class Mapeador {
                 new ArrayList<>(turmas.values()),
                 noticias,
                 atividades);
+    }
+
+    private static Catequista catequistaDe(List<Object> l) {
+        Catequista catequista = new Catequista(
+                texto(l, 0), texto(l, 2), texto(l, 3), inteiro(l, 4), texto(l, 5), texto(l, 7));
+        catequista.setCoordenador(inteiro(l, 11) == 1);
+
+        return catequista;
     }
 
     // Dados de acesso: senha provisória, validade do código e nome de usuário.
