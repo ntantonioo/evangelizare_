@@ -1,5 +1,8 @@
 package ui.telas;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import exception.CatequistaNaoEncontradoException;
 import exception.TurmaNaoEncontradaException;
 
@@ -22,7 +25,7 @@ public class TelaCatequista {
 
     // CADASTRO DE USUÁRIO
 
-    public void cadastrarUsuario() {
+    public void cadastrarUsuario(Usuario administrador) {
         System.out.println("\n========== CADASTRO DE USUÁRIO ==========");
         System.out.println("1 - Catequista");
         System.out.println("2 - Catequisando");
@@ -35,7 +38,7 @@ public class TelaCatequista {
         switch (perfil) {
             case 1:
                 System.out.println("Perfil selecionado: Catequista.");
-                cadastrarCatequista();
+                cadastrarCatequista(administrador);
                 break;
 
             case 2:
@@ -58,7 +61,7 @@ public class TelaCatequista {
 
     // CADASTRAR CATEQUISTA
 
-    private void cadastrarCatequista() {
+    private void cadastrarCatequista(Usuario administrador) {
         System.out.println("\n========== CADASTRO DO CATEQUISTA ==========");
 
         System.out.println("Nome: ");
@@ -86,6 +89,15 @@ public class TelaCatequista {
 
             System.out.println("\nCatequista cadastrado com sucesso!");
             Credenciais.exibir(catequista.getNome(), login, codigo);
+
+            System.out.println(
+                    "\nEste catequista também será coordenador (com as permissões de administrador)? (S/N): "
+            );
+
+            if (lerSimNao()) {
+                sistema.definirCoordenador(catequista.getId(), true, administrador);
+                System.out.println("Coordenador definido com sucesso!");
+            }
 
         } catch (IllegalArgumentException e) {
             System.out.println("\nNão foi possível cadastrar: " + e.getMessage());
@@ -142,7 +154,7 @@ public class TelaCatequista {
 
         Catequista catequista = seletor.buscarEEscolher(
                 "catequista",
-                sistema::pesquisarCatequistaPorNome,
+                Seletor.buscaCatequistas(sistema),
                 c -> c.getNome() + " | " + c.getTelefone() + " | usuário: " + c.getLogin()
         );
 
@@ -189,7 +201,7 @@ public class TelaCatequista {
 
         Catequista catequista = seletor.buscarEEscolher(
                 "catequista",
-                sistema::pesquisarCatequistaPorNome,
+                Seletor.buscaCatequistas(sistema),
                 c -> c.getNome() + " | " + c.getTelefone()
         );
 
@@ -219,5 +231,71 @@ public class TelaCatequista {
                             + e.getMessage()
             );
         }
+    }
+
+    // COORDENAÇÃO
+
+    // Coordenador é o catequista que também tem as permissões de administrador.
+    public void gerenciarCoordenacao(Usuario administrador) {
+        System.out.println("\n========== COORDENAÇÃO ==========");
+        System.out.println("Coordenador é o catequista que também tem as permissões de administrador.");
+
+        List<Catequista> coordenadores = sistema.pesquisarCatequistaPorNome("").stream()
+                .filter(Catequista::isCoordenador)
+                .collect(Collectors.toList());
+
+        System.out.println(
+                coordenadores.isEmpty()
+                        ? "Nenhum coordenador no momento."
+                        : "Coordenadores atuais: " + coordenadores.stream()
+                        .map(Catequista::getNome)
+                        .collect(Collectors.joining(", "))
+        );
+
+        Catequista catequista = seletor.buscarEEscolher(
+                "catequista",
+                Seletor.buscaCatequistas(sistema),
+                c -> c.getNome() + " | " + c.getTelefone()
+                        + (c.isCoordenador() ? " | COORDENADOR" : "")
+        );
+
+        if (catequista == null) {
+            System.out.println("Operação cancelada.");
+            return;
+        }
+
+        boolean tornar = !catequista.isCoordenador();
+
+        System.out.println(
+                (tornar ? "Tornar " + catequista.getNome() + " coordenador"
+                        : "Retirar a coordenação de " + catequista.getNome()) + "? (S/N): "
+        );
+
+        if (!lerSimNao()) {
+            System.out.println("Operação cancelada.");
+            return;
+        }
+
+        try {
+            sistema.definirCoordenador(catequista.getId(), tornar, administrador);
+
+            System.out.println(tornar
+                    ? "\nAgora " + catequista.getNome() + " também é administrador."
+                    : "\nA coordenação foi retirada.");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("\nNão foi possível alterar: " + e.getMessage());
+        }
+    }
+
+    private boolean lerSimNao() {
+        String resposta = console.lerTexto().trim();
+
+        while (!resposta.equalsIgnoreCase("S") && !resposta.equalsIgnoreCase("N")) {
+            System.out.print("Resposta inválida. Digite S ou N: ");
+            resposta = console.lerTexto().trim();
+        }
+
+        return resposta.equalsIgnoreCase("S");
     }
 }

@@ -7,8 +7,8 @@ import exception.NoticiaNaoEncontradaException;
 import exception.TurmaNaoEncontradaException;
 
 import model.*;
-import service.SistemaEvangelizare;
 import ui.Console;
+import service.SistemaEvangelizare;
 
 public class TelaNoticia {
 
@@ -28,7 +28,7 @@ public class TelaNoticia {
         do {
             System.out.println("\n========== MENU DE NOTÍCIAS ==========");
 
-            if (usuarioLogado instanceof Administrador) {
+            if (usuarioLogado.ehAdministrador()) {
                 System.out.println("1 - Cadastrar notícia");
                 System.out.println("2 - Consultar notícias");
                 System.out.println("3 - Remover notícia");
@@ -48,7 +48,7 @@ public class TelaNoticia {
 
             switch (opcao) {
                 case 1:
-                    if (usuarioLogado instanceof Administrador
+                    if (usuarioLogado.ehAdministrador()
                             || usuarioLogado instanceof Catequista) {
                         cadastrar(usuarioLogado);
 
@@ -58,7 +58,7 @@ public class TelaNoticia {
                     break;
 
                 case 2:
-                    if (usuarioLogado instanceof Administrador
+                    if (usuarioLogado.ehAdministrador()
                             || usuarioLogado instanceof Catequista) {
                         consultar(usuarioLogado);
                     } else {
@@ -67,7 +67,7 @@ public class TelaNoticia {
                     break;
 
                 case 3:
-                    if (usuarioLogado instanceof Administrador) {
+                    if (usuarioLogado.ehAdministrador()) {
                         remover(usuarioLogado);
                     } else {
                         System.out.println("Opção inválida.");
@@ -144,7 +144,7 @@ public class TelaNoticia {
 
         try {
             // O administrador escolhe se a notícia será geral ou específica.
-            if (usuarioLogado instanceof Administrador) {
+            if (usuarioLogado.ehAdministrador()) {
                 System.out.println("\n1 - Notícia geral");
                 System.out.println("2 - Notícia para uma turma específica");
                 System.out.print("Escolha uma opção: ");
@@ -245,7 +245,7 @@ public class TelaNoticia {
         System.out.println("\n========== REMOVER NOTÍCIA ==========");
 
         // Proteção adicional na interface.
-        if (!(usuarioLogado instanceof Administrador)) {
+        if (!usuarioLogado.ehAdministrador()) {
             System.out.println(
                     "Somente o administrador pode remover notícias."
             );

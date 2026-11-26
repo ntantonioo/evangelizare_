@@ -45,10 +45,6 @@ public class TelaSenha {
 
     // TROCA OBRIGATÓRIA (senha provisória)
 
-    /**
-     * Exige que o usuário defina uma nova senha antes de entrar no sistema.
-     * Devolve true se a senha foi trocada, ou false se ele cancelou.
-     */
     public boolean trocarSenhaProvisoria(Usuario usuario, String senhaAtual) {
         System.out.println("\nEste é o seu primeiro acesso (ou o seu código foi renovado).");
         System.out.println("Crie a sua senha para continuar.");
@@ -81,7 +77,7 @@ public class TelaSenha {
 
         Usuario usuario = seletor.buscarEEscolher(
                 "usuário",
-                sistema::pesquisarUsuarioPorNome,
+                Seletor.buscaUsuarios(sistema),
                 u -> u.getNome() + " | " + perfil(u) + " | usuário: " + u.getLogin()
         );
 
@@ -106,8 +102,8 @@ public class TelaSenha {
     private static String perfil(Usuario usuario) {
         if (usuario instanceof Administrador) {
             return "Administrador";
-        } else if (usuario instanceof Catequista) {
-            return "Catequista";
+        } else if (usuario instanceof Catequista catequista) {
+            return catequista.isCoordenador() ? "Catequista e administrador" : "Catequista";
         } else if (usuario instanceof Responsavel) {
             return "Responsável";
         }

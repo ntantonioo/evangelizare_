@@ -278,8 +278,107 @@ public class TelaTurma {
     private Catequista escolherCatequista(String titulo) {
         return seletor.buscarEEscolher(
                 titulo,
-                sistema::pesquisarCatequistaPorNome,
+                Seletor.buscaCatequistas(sistema),
                 c -> c.getNome() + " | " + c.getTelefone()
         );
+    }
+
+    // VISÃO GERAL (administrador)
+
+    public void visaoGeral(Usuario administrador) {
+        System.out.println("\n========== VISÃO GERAL DE TURMAS ==========");
+        System.out.println("1 - Uma turma");
+        System.out.println("2 - Todas as turmas");
+        System.out.println("0 - Voltar");
+        System.out.print("Escolha uma opção: ");
+
+        int opcao = console.lerInt();
+
+        try {
+            if (opcao == 1) {
+                Turma turma = seletor.escolherTurma(sistema, "Turma");
+
+                if (turma != null) {
+                    exibirResumo(sistema.resumirTurma(turma.getIdTurma(), administrador));
+                }
+
+            } else if (opcao == 2) {
+                List<Turma> turmas = Seletor.todasAsTurmas(sistema);
+
+                if (turmas.isEmpty()) {
+                    System.out.println("Nenhuma turma cadastrada.");
+                }
+
+                for (Turma turma : turmas) {
+                    exibirResumo(sistema.resumirTurma(turma.getIdTurma(), administrador));
+                }
+
+            } else if (opcao != 0) {
+                System.out.println("Opção inválida.");
+            }
+
+        } catch (TurmaNaoEncontradaException | IllegalArgumentException e) {
+            System.out.println("Não foi possível exibir: " + e.getMessage());
+        }
+    }
+
+    private void exibirResumo(ResumoDaTurma resumo) {
+        Turma turma = resumo.getTurma();
+
+        System.out.println("\n==================================================");
+        System.out.println("TURMA " + turma.getIdTurma() + " | " + turma.getTipoTurma());
+        System.out.println("==================================================");
+
+        System.out.println("Catequistas:");
+
+        for (Catequista catequista : resumo.getCatequistas()) {
+            System.out.println(
+                    "  - " + catequista.getNome() + " | " + catequista.getTelefone()
+                            + (catequista.isCoordenador() ? " | coordenador" : "")
+            );
+        }
+
+        System.out.println(
+                "\nCatequisandos: " + resumo.getTotalDeCatequisandos()
+                        + " | Responsáveis: " + resumo.getTotalDeResponsaveis()
+        );
+
+        if (resumo.getCatequisandos().isEmpty()) {
+            System.out.println("  (nenhum catequisando nesta turma)");
+            return;
+        }
+
+        boolean acessoProprio = turma.getTipoTurma() != TipoTurma.CATEQUESE;
+        int numero = 1;
+
+        for (Catequisando catequisando : resumo.getCatequisandos()) {
+            System.out.println("--------------------------------------------------");
+            System.out.println(
+                    numero++ + ". " + catequisando.getNome() + " | " + catequisando.getIdade()
+                            + " anos | " + catequisando.getTelefone()
+            );
+            System.out.println(
+                    "   Acesso: " + (acessoProprio
+                            ? "usuário " + catequisando.getLogin()
+                            : "sem acesso próprio (acompanhado pelos responsáveis)")
+            );
+
+            if (catequisando.getVinculos().isEmpty()) {
+                System.out.println("   Responsáveis: nenhum cadastrado");
+                continue;
+            }
+
+            System.out.println("   Responsáveis:");
+
+            for (VinculoResponsavel vinculo : catequisando.getVinculos()) {
+                Responsavel responsavel = vinculo.getResponsavel();
+
+                System.out.println(
+                        "     - " + responsavel.getNome() + " (" + vinculo.getParentesco() + ")"
+                                + " | " + responsavel.getTelefone()
+                                + " | usuário " + responsavel.getLogin()
+                );
+            }
+        }
     }
 }

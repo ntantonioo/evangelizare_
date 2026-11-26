@@ -94,7 +94,11 @@ public class MenuPrincipal {
                 return;
             }
 
-            if (usuario instanceof Administrador) {
+            if (usuario instanceof Catequista coordenador && coordenador.isCoordenador()) {
+                System.out.println("Perfis: Catequista e Administrador");
+                escolherPerfilDoCoordenador(coordenador);
+
+            } else if (usuario instanceof Administrador) {
                 menuAdministrador.exibir(usuario);
 
             } else if (usuario instanceof Catequista catequista) {
@@ -116,6 +120,37 @@ public class MenuPrincipal {
                             + "peça um novo ao administrador."
             );
         }
+    }
+
+    private void escolherPerfilDoCoordenador(Catequista coordenador) {
+        int opcao;
+
+        do {
+            System.out.println("\nEntrar como:");
+            System.out.println("1 - Catequista");
+            System.out.println("2 - Administrador");
+            System.out.println("0 - Encerrar sessão");
+            System.out.print("Escolha uma opção: ");
+
+            opcao = console.lerInt();
+
+            switch (opcao) {
+                case 1:
+                    menuCatequista.exibir(coordenador);
+                    break;
+
+                case 2:
+                    menuAdministrador.exibir(coordenador);
+                    break;
+
+                case 0:
+                    System.out.println("Sessão encerrada.");
+                    break;
+
+                default:
+                    System.out.println("Opção inválida.");
+            }
+        } while (opcao != 0);
     }
 
     // PRIMEIRO ACESSO

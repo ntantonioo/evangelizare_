@@ -3,18 +3,19 @@ package ui.telas;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import exception.TurmaNaoEncontradaException;
+import model.Catequisando;
+import model.Catequista;
+import model.Responsavel;
 import model.TipoTurma;
 import model.Turma;
+import model.Usuario;
 import service.SistemaEvangelizare;
 import ui.Console;
 
-/**
- * Deixa o usuário escolher uma pessoa ou uma turma em uma lista numerada,
- * em vez de digitar um ID. Evita erros de digitação e dispensa que alguém
- * precise decorar identificadores.
- */
 class Seletor {
 
     private static final int LIMITE_DE_RESULTADOS = 30;
@@ -25,7 +26,6 @@ class Seletor {
         this.console = console;
     }
 
-    /** Mostra a lista numerada e devolve a opção escolhida, ou null se cancelou. */
     <T> T escolher(String titulo, List<T> opcoes, Function<T, String> descricao) {
         if (opcoes.isEmpty()) {
             System.out.println("Nenhuma opção disponível.");
@@ -61,7 +61,7 @@ class Seletor {
 
         while (true) {
             System.out.println(
-                    "\nBuscar " + titulo + " (parte do nome; em branco lista todos; 0 cancela): "
+                    "\nBuscar " + titulo + " (parte do nome ou do telefone; em branco lista todos; 0 cancela): "
             );
             String texto = console.lerTexto().trim();
 
@@ -87,8 +87,7 @@ class Seletor {
         }
     }
 
-    /** Escolhe entre todas as turmas do sistema. */
-    Turma escolherTurma(SistemaEvangelizare sistema, String titulo) {
+    static List<Turma> todasAsTurmas(SistemaEvangelizare sistema) {
         List<Turma> turmas = new ArrayList<>();
 
         for (TipoTurma tipo : TipoTurma.values()) {
@@ -99,6 +98,55 @@ class Seletor {
             }
         }
 
-        return escolher(titulo, turmas, t -> t.getIdTurma() + " | " + t.getTipoTurma());
+        turmas.sort(java.util.Comparator.comparing(Turma::getIdTurma));
+
+        return turmas;
+    }
+
+    Turma escolherTurma(SistemaEvangelizare sistema, String titulo) {
+        return escolher(
+                titulo,
+                todasAsTurmas(sistema),
+                t -> t.getIdTurma() + " | " + t.getTipoTurma()
+        );
+    }
+
+    static <T> Function<String, List<T>> porNomeOuTelefone(
+            Supplier<List<T>> todos, Function<T, String> nome, Function<T, String> telefone) {
+
+        return texto -> {
+            String procurado = texto.trim().toLowerCase();
+            String digitos = procurado.replaceAll("\\D", "");
+
+            return todos.get().stream()
+                    .filter(t -> nome.apply(t).toLowerCase().contains(procurado)
+                            || (!digitos.isEmpty()
+                            && telefone.apply(t).replaceAll("\\D", "").contains(digitos)))
+                    .collect(Collectors.toList());
+        };
+    }
+
+    static Function<String, List<Catequista>> buscaCatequistas(SistemaEvangelizare sistema) {
+        return porNomeOuTelefone(
+                () -> sistema.pesquisarCatequistaPorNome(""),
+                Catequista::getNome, Catequista::getTelefone);
+    }
+
+    static Function<String, List<Catequisando>> buscaCatequisandos(SistemaEvangelizare sistema) {
+        return porNomeOuTelefone(
+                () -> sistema.pesquisarCatequisandoPorNome(""),
+                Catequisando::getNome, Catequisando::getTelefone);
+    }
+
+    static Function<String, List<Responsavel>> buscaResponsaveis(SistemaEvangelizare sistema) {
+        return porNomeOuTelefone(
+                () -> sistema.pesquisarResponsavelPorNome(""),
+                Responsavel::getNome, Responsavel::getTelefone);
+    }
+
+    static Function<String, List<Usuario>> buscaUsuarios(SistemaEvangelizare sistema) {
+        return porNomeOuTelefone(
+                () -> sistema.pesquisarUsuarioPorNome(""),
+                Usuario::getNome, Usuario::getTelefone);
     }
 }

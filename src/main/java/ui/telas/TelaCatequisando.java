@@ -17,7 +17,6 @@ import ui.Console;
 
 public class TelaCatequisando {
 
-    // Idade mínima de um responsável (a mesma regra do serviço, aqui só para avisar cedo).
     private static final int IDADE_MINIMA_RESPONSAVEL = 18;
 
     private final SistemaEvangelizare sistema;
@@ -32,11 +31,11 @@ public class TelaCatequisando {
 
     // CONSULTA DE CATEQUISANDOS
 
-    public void consultar(Catequista catequista) {
+    public void consultar(Usuario operador) {
         System.out.println("\n========== CONSULTAR CATEQUISANDOS ==========");
 
         try {
-            Turma turma = escolherTurmaDoCatequista(catequista);
+            Turma turma = escolherTurmaDoOperador(operador);
 
             if (turma == null) {
                 return;
@@ -117,11 +116,11 @@ public class TelaCatequisando {
 
     // CADASTRO DE CATEQUISANDO
 
-    public void cadastrar(Catequista catequista) {
+    public void cadastrar(Usuario operador) {
         System.out.println("\n========== CADASTRO DE CATEQUISANDO ==========");
 
         try {
-            Turma turma = escolherTurmaDoCatequista(catequista);
+            Turma turma = escolherTurmaDoOperador(operador);
 
             if (turma == null) {
                 return;
@@ -186,11 +185,11 @@ public class TelaCatequisando {
 
     // EDITAR CATEQUISANDO
 
-    public void editar(Catequista catequista) {
+    public void editar(Usuario operador) {
         System.out.println("\n========== EDITAR CATEQUISANDO ==========");
 
         try {
-            Catequisando selecionado = escolherCatequisando(catequista);
+            Catequisando selecionado = escolherCatequisando(operador);
 
             if (selecionado == null) {
                 return;
@@ -252,11 +251,11 @@ public class TelaCatequisando {
 
     // REMOVER CATEQUISANDO
 
-    public void remover(Catequista catequista) {
+    public void remover(Usuario operador) {
         System.out.println("\n========== REMOVER CATEQUISANDO ==========");
 
         try {
-            Catequisando selecionado = escolherCatequisando(catequista);
+            Catequisando selecionado = escolherCatequisando(operador);
 
             if (selecionado == null) {
                 return;
@@ -290,8 +289,8 @@ public class TelaCatequisando {
 
         Catequisando catequisando = seletor.buscarEEscolher(
                 "catequisando",
-                sistema::pesquisarCatequisandoPorNome,
-                c -> c.getNome() + " | turma " + c.getTurma().getIdTurma()
+                Seletor.buscaCatequisandos(sistema),
+                c -> c.getNome() + " | " + c.getTelefone() + " | turma " + c.getTurma().getIdTurma()
         );
 
         if (catequisando == null) {
@@ -332,8 +331,12 @@ public class TelaCatequisando {
 
     // ESCOLHAS
 
-    private Turma escolherTurmaDoCatequista(Catequista catequista) {
-        List<Turma> turmas = sistema.pesquisarTurmaPorCatequista(catequista.getId());
+    private Turma escolherTurmaDoOperador(Usuario operador) {
+        if (operador.ehAdministrador()) {
+            return seletor.escolherTurma(sistema, "Turmas");
+        }
+
+        List<Turma> turmas = sistema.pesquisarTurmaPorCatequista(operador.getId());
 
         if (turmas.isEmpty()) {
             System.out.println("Você não possui turmas cadastradas.");
@@ -347,8 +350,17 @@ public class TelaCatequisando {
         );
     }
 
-    private Catequisando escolherCatequisando(Catequista catequista) {
-        Turma turma = escolherTurmaDoCatequista(catequista);
+    private Catequisando escolherCatequisando(Usuario operador) {
+        // O administrador procura a família por nome ou telefone, em todas as turmas.
+        if (operador.ehAdministrador()) {
+            return seletor.buscarEEscolher(
+                    "catequisando",
+                    Seletor.buscaCatequisandos(sistema),
+                    c -> c.getNome() + " | " + c.getTelefone() + " | turma " + c.getTurma().getIdTurma()
+            );
+        }
+
+        Turma turma = escolherTurmaDoOperador(operador);
 
         if (turma == null) {
             return null;
@@ -446,7 +458,7 @@ public class TelaCatequisando {
     private Responsavel escolherResponsavelExistente() {
         Responsavel responsavel = seletor.buscarEEscolher(
                 "responsável",
-                sistema::pesquisarResponsavelPorNome,
+                Seletor.buscaResponsaveis(sistema),
                 r -> r.getNome() + " | " + r.getTelefone() + " | usuário: " + r.getLogin()
         );
 
