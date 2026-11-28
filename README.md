@@ -22,11 +22,12 @@ O sistema busca organizar as informações e definir permissões de acordo com o
 - [x] Definição dos perfis de usuário e das regras de acesso.
 - [x] Estrutura para gerenciamento de turmas e usuários.
 - [x] Estrutura para autenticação de usuários.
-- [x] Concluir e validar o fluxo completo de autenticação.
 - [x] Finalizar e testar os fluxos de cadastro.
 - [x] Implementar o gerenciamento completo de notícias.
 - [x] Cadastro e gerenciamento de catequisandos pelos catequistas responsáveis
 - [x] Controle de permissões para publicação, consulta e remoção de notícias
+- [x] Visão geral da turma: tela do administrador com os catequistas, os catequisandos e os responsáveis de cada um, em uma turma ou em todas.
+- [x] O administrador cadastra, consulta, edita, remove e transfere catequisandos de qualquer turma, e o menu do administrador foi organizado em submenus.
 - [x] Criação de Hasher para segurança das senhas
 - [x] Atividades: o catequista publica atividades para a sua turma, com título, descrição e prazo opcional; os catequisandos consultam; o administrador acompanha e remove.
 - [x] Banco de dados SQLite: os dados são gravados automaticamente a cada alteração e continuam lá quando o programa é fechado e aberto de novo.
